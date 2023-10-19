@@ -17,57 +17,25 @@ const submit = handleSubmit(values => {
 
 <template>
   <main>
-    <div class="center">
-      <form @submit.prevent="submit" class="minW400">
-        <h1 class="center title"><strong>Inicio de sesión</strong></h1>
-        <v-text-field v-model="name.value.value" :error-messages="name.errorMessage.value" label="Usuario" class="marB10"
-          variant="outlined"></v-text-field>
-        <v-text-field v-model="name.value.value" :error-messages="name.errorMessage.value" label="Password" class="marB10"
-          variant="outlined"></v-text-field>
-        <div class="center marB10">
-          <v-btn class="me-4 text-none minW200" type="submit" variant="outlined">Iniciar sesión</v-btn>
-          <v-btn class="text-none minW200" @click="handleReset" variant="outlined">Borrar</v-btn>
+    <div class="flex justify-center items-center h-screen bg-slate-800 text-slate-800">
+      <form @submit.prevent="submit"
+        class="min-w-[500px] border-2 bg-slate-200 rounded-lg p-24 drop-shadow-[25px_25px_1px_rgba(0,0,0,0.1)]">
+        <h1 class="flex justify-center items-center text-4xl mb-10 font-bold antialiased ">Inicio de sesión</h1>
+        <v-text-field v-model="name.value.value" :error-messages="name.errorMessage.value" label="Usuario"
+          variant="outlined" class="mb-2"></v-text-field>
+        <v-text-field v-model="name.value.value" :error-messages="name.errorMessage.value" label="Password"
+          variant="outlined" class="mb-2 "></v-text-field>
+        <div class="center mb-6 flex justify-center items-center">
+          <v-btn class="text-none w-full" color="#1abc9c" variant="flat" type="submit">Iniciar sesión</v-btn>
         </div>
-        <v-divider class="marB10 marT20"></v-divider>
-        <div class="center marT20">
-          <p><strong>¿Olvidaste tu contraseña?</strong></p>
+        <v-divider class="border-opacity-100 border-2 bg-slate-500 rounded"></v-divider>
+        <div class="center pt-5 flex justify-center items-center">
+          <p class="font-bold	">¿Olvidaste tu contraseña?</p>
         </div>
-        <div class="center marT10">
-          <p><strong>Registrarse</strong></p>
+        <div class="center pt-2 flex justify-center items-center">
+          <p class="font-bold	">Registrarse</p>
         </div>
       </form>
     </div>
   </main>
 </template>
-<style>
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.title {
-  margin-bottom: 25px;
-  font-size: 40px;
-}
-
-.minW400 {
-  min-width: 400px;
-}
-
-.minW200 {
-  min-width: 200px;
-}
-
-.marB10 {
-  margin-bottom: 10px;
-}
-
-.marT20 {
-  margin-top: 20px;
-}
-
-.marT10 {
-  margin-top: 10px;
-}
-</style>
