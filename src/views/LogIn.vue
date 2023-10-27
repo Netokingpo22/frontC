@@ -1,33 +1,58 @@
 <script setup>
 import { useField, useForm } from 'vee-validate'
 
-const { handleSubmit, handleReset } = useForm({
+const { handleSubmit } = useForm({
   validationSchema: {
-    name(value) {
+    username(value) {
       if (value?.length >= 1) return true
       return 'El nombré no puede estar vacío. '
     },
     password(value) {
-      if (value?.length >= 2) return true
+      if (value?.length >= 1) return true
       return 'La contrseña no puede estar vacío. '
     },
   },
 })
-const name = useField('name')
+const username = useField('username')
 const password = useField('password')
-const checkbox = useField('checkbox')
-const submit = handleSubmit(values => {
-  alert(JSON.stringify(values, null, 2))
+const logIn = handleSubmit(values => {
+  fetch('http://127.0.0.1:8000/api/v1/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(values),
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.detail == "Not found.") {
+        dialog = true;
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+    });
 })
 </script>
 
 <template>
   <main>
+    <v-dialog v-model="dialog" width="auto">
+      <v-card>
+        <v-card-text>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+          magna aliqua.
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" block @click="dialog = false">Close Dialog</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <div class="flex justify-center items-center h-screen bg-slate-800 text-slate-800">
-      <form @submit.prevent="submit"
+      <form @submit.prevent="logIn"
         class="min-w-[400px] border-2 bg-slate-200 rounded-lg p-10 drop-shadow-[25px_25px_1px_rgba(0,0,0,0.1)]">
         <h1 class="flex justify-center items-center text-4xl mb-10 font-bold antialiased ">Inicio de sesión</h1>
-        <v-text-field v-model="name.value.value" :error-messages="name.errorMessage.value" label="Usuario"
+        <v-text-field v-model="username.value.value" :error-messages="username.errorMessage.value" label="Usuario"
           variant="outlined" class="mb-2" placeholder="Introduzca su usuario"></v-text-field>
 
         <v-text-field v-model="password.value.value" :error-messages="password.errorMessage.value" label="Contraseña"
@@ -55,6 +80,7 @@ const submit = handleSubmit(values => {
 export default {
   data: () => ({
     visible: false,
+    dialog: false,
   }), methods: {
     onClickAppendIcon() {
       this.visible = !this.visible;
