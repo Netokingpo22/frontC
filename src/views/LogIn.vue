@@ -1,6 +1,9 @@
 <script setup>
 import { useField, useForm } from 'vee-validate'
+import { useToast } from "vue-toastification";
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const { handleSubmit } = useForm({
   validationSchema: {
     username(value) {
@@ -13,6 +16,21 @@ const { handleSubmit } = useForm({
     },
   },
 })
+const toast = useToast();
+const options = {
+  position: "top-right",
+  timeout: 5000,
+  closeOnClick: true,
+  pauseOnFocusLoss: true,
+  pauseOnHover: true,
+  draggable: true,
+  draggablePercent: 0.6,
+  showCloseButtonOnHover: false,
+  hideProgressBar: false,
+  closeButton: "button",
+  icon: true,
+  rtl: false
+};
 const username = useField('username')
 const password = useField('password')
 const logIn = handleSubmit(values => {
@@ -26,28 +44,24 @@ const logIn = handleSubmit(values => {
     .then(response => response.json())
     .then(data => {
       if (data.detail == "Not found.") {
-        dialog = true;
+        toast.error("Error : \nEl usuario o la contraseña no son correctos", options);
+        return;
       }
+      localStorage.setItem("id", data.id);
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("token", "token "+data.token);
+      toast.success("Se ha iniciado sesión de manera correcta.", options);
+      router.push('/home')
     })
     .catch((error) => {
-      console.error('Error:', error);
+      console.log(error);
+      toast.error("Error : \nHa ocurrido un error en el servidor.", options);
     });
 })
 </script>
 
 <template>
   <main>
-    <v-dialog v-model="dialog" width="auto">
-      <v-card>
-        <v-card-text>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua.
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">Close Dialog</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <div class="flex justify-center items-center h-screen bg-slate-800 text-slate-800">
       <form @submit.prevent="logIn"
         class="min-w-[400px] border-2 bg-slate-200 rounded-lg p-10 drop-shadow-[25px_25px_1px_rgba(0,0,0,0.1)]">
@@ -76,11 +90,11 @@ const logIn = handleSubmit(values => {
     </div>
   </main>
 </template>
+
 <script>
 export default {
   data: () => ({
     visible: false,
-    dialog: false,
   }), methods: {
     onClickAppendIcon() {
       this.visible = !this.visible;
