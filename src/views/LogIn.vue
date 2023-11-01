@@ -51,7 +51,7 @@ const logIn = handleSubmit(values => {
       localStorage.setItem("username", data.username);
       localStorage.setItem("token", "token "+data.token);
       toast.success("Se ha iniciado sesión de manera correcta.", options);
-      router.push('/home')
+      router.push('/carrera')
     })
     .catch((error) => {
       console.log(error);

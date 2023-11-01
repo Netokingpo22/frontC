@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LogIn from '../views/LogIn.vue'
-import HomePage from '../views/HomePage.vue'
+import Carrera from '../views/Carrera.vue'
+import Materia from '../views/Materia.vue'
+import Maestro from '../views/Maestro.vue'
+import Alumno from '../views/Alumno.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,12 +14,27 @@ const router = createRouter({
       component: LogIn
     },
     {
-      path: '/home',
-      name: 'home',
-      component: HomePage
+      path: '/carrera',
+      name: 'carrera',
+      component: Carrera
     },
-    { path: "/", redirect: '/home' },
-    { path: '/:pathMatch(.*)', redirect: '/home' },
+    {
+      path: '/materia',
+      name: 'materia',
+      component: Materia
+    },
+    {
+      path: '/maestro',
+      name: 'maestro',
+      component: Maestro
+    },
+    {
+      path: '/alumno',
+      name: 'alumno',
+      component: Alumno
+    },
+    { path: "/", redirect: '/carrera' },
+    { path: '/:pathMatch(.*)', redirect: '/carrera' },
   ]
 })
 

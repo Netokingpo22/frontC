@@ -62,11 +62,13 @@ const logIn = handleSubmit(values => {
 <template>
   <main>
     <v-app>
-      <div class="grid grid-cols-2 grid-rows-1 gap-1 h-screen">
-        <div class="bg-slate-800 max-w-fit">
+      <div class="flex">
+        <div class="bg-slate-800 h-screen w-fit">
           <NavBar></NavBar>
         </div>
-        <div>02</div>
+        <div class="flex justify-center items-center w-screen h-screen">
+          Maestro
+        </div>
       </div>
     </v-app>
   </main>
