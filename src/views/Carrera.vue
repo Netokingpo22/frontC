@@ -2,54 +2,15 @@
 import { useToast } from "vue-toastification";
 import { useRouter } from 'vue-router';
 
-import { ref } from 'vue'
 import { useField, useForm } from 'vee-validate'
 
-const { handleSubmit, handleReset } = useForm({
-  validationSchema: {
-    name(value) {
-      if (value?.length >= 2) return true
+import { ref, onMounted } from 'vue'
+import SvgIcon from '@jamescoyle/vue-icon';
+import { mdiDeleteOutline, mdiFileEditOutline } from '@mdi/js';
 
-      return 'Name needs to be at least 2 characters.'
-    },
-    phone(value) {
-      if (value?.length > 9 && /[0-9-]+/.test(value)) return true
+import NavBar from "../components/NavBar.vue"
+import { VDataTable } from "vuetify/labs/VDataTable";
 
-      return 'Phone number needs to be at least 9 digits.'
-    },
-    email(value) {
-      if (/^[a-z.-]+@[a-z.-]+\.[a-z]+$/i.test(value)) return true
-
-      return 'Must be a valid e-mail.'
-    },
-    select(value) {
-      if (value) return true
-
-      return 'Select an item.'
-    },
-    checkbox(value) {
-      if (value === '1') return true
-
-      return 'Must be checked.'
-    },
-  },
-})
-const name = useField('name')
-const phone = useField('phone')
-const email = useField('email')
-const select = useField('select')
-const checkbox = useField('checkbox')
-
-const items = ref([
-  'Item 1',
-  'Item 2',
-  'Item 3',
-  'Item 4',
-])
-
-const submit = handleSubmit(values => {
-  alert(JSON.stringify(values, null, 2))
-})
 const router = useRouter()
 const toast = useToast();
 const options = {
@@ -66,6 +27,82 @@ const options = {
   icon: true,
   rtl: false
 };
+
+const { handleSubmit } = useForm({
+  validationSchema: {
+    nombre(value) {
+      if (value?.length >= 1) return true
+      return 'El nombré no puede estar vacío. '
+    },
+    siglas(value) {
+      if (value?.length >= 1) return true
+      return 'Las siglas no puede estar vacío. '
+    },
+  },
+})
+const nombre = useField('nombre')
+const siglas = useField('siglas')
+const submit = handleSubmit(values => {
+  fetch('http://127.0.0.1:8000/api/v1/Carrera', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem("token")
+    },
+    body: JSON.stringify(values),
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.detail == "Not found.") {
+        toast.error("Error : \nEl usuario o la contraseña no son correctos", options);
+        return;
+      }
+      toast.success("Se ha iniciado sesión de manera correcta.", options);
+      getCarreras();
+    })
+    .catch((error) => {
+      console.log(error);
+      toast.error("Error : \nHa ocurrido un error en el servidor.", options);
+    });
+})
+
+const editarItem = ((param) => {
+  console.log(param);
+})
+
+const no_results_text = "No se encontraron resultados";
+const carreras = ref([]);
+const search = ref('');
+const headers = [
+  {
+    align: 'start',
+    key: 'id',
+    sortable: true,
+    title: 'Id',
+  },
+  { key: 'nombre', title: 'Nombre' },
+  { key: 'siglas', title: 'Siglas' },
+  { title: 'Editar', key: 'edit', sortable: false },
+  { title: 'Elimianr', key: 'delete', sortable: false },
+];
+
+async function getCarreras() {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/Carrera', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem("token")
+      },
+    });
+    const data = await response.json();
+    carreras.value = data;
+  } catch (error) {
+    console.log(error);
+    toast.error("Error : \nHa ocurrido un error en el servidor.", options);
+  }
+}
+onMounted(getCarreras);
 </script>
 
 <template>
@@ -76,327 +113,46 @@ const options = {
           <NavBar></NavBar>
         </div>
         <div class="flex flex-col w-full align-top">
-          <v-card class="w-full">
-            <div>
-              <form @submit.prevent="submit">
-                <v-text-field v-model="name.value.value" :counter="10" :error-messages="name.errorMessage.value"
-                  label="Name"></v-text-field>
-
-                <v-text-field v-model="phone.value.value" :counter="7" :error-messages="phone.errorMessage.value"
-                  label="Phone Number"></v-text-field>
-
-                <v-text-field v-model="email.value.value" :error-messages="email.errorMessage.value"
-                  label="E-mail"></v-text-field>
-
-                <v-select v-model="select.value.value" :items="items" :error-messages="select.errorMessage.value"
-                  label="Select"></v-select>
-
-                <v-checkbox v-model="checkbox.value.value" :error-messages="checkbox.errorMessage.value" value="1"
-                  label="Option" type="checkbox"></v-checkbox>
-
-                <v-btn class="me-4" type="submit">
-                  submit
-                </v-btn>
-
-                <v-btn @click="handleReset">
-                  clear
+          <div class="w-full">
+            <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4 max-w-lg p-6">
+              <form @submit.prevent="submit" class="flex flex-col justify-center items-center">
+                <p class="text-3xl p-2 mb-4">Agregar Carrera</p>
+                <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
+                  variant="outlined" class="w-full mb-3"></v-text-field>
+                <v-text-field v-model="siglas.value.value" :error-messages="siglas.errorMessage.value" label="Siglas"
+                  variant="outlined" class="w-full mb-3"></v-text-field>
+                <v-btn class="text-none w-full" color="#1abc9c" variant="flat" type="submit">
+                  <p class=" font-bold">Agregar</p>
                 </v-btn>
               </form>
             </div>
-            <v-card-title>
-              <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                hide-details></v-text-field>
-            </v-card-title>
-            <v-data-table :headers="headers" :items="desserts" :search="search"></v-data-table>
-          </v-card>
+            <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4">
+              <div class="flex mt-3 justify-between align-middle">
+                <v-card-title>
+                  <p class="text-3xl pt-2 pl-4">Carreras</p>
+                </v-card-title>
+                <v-card-title>
+                  <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details
+                    variant="outlined" class="min-w-[400px]"></v-text-field>
+                </v-card-title>
+              </div>
+              <v-data-table :headers="headers" :items="carreras" :search="search" class="px-6"
+                :no-data-text="no_results_text">
+                <template v-slot:item.edit="{ item }">
+                  <v-btn variant="flat" color="#FFCC33" @click="editarItem(item)">
+                    <svg-icon type="mdi" :path="mdiFileEditOutline" class="text-white"></svg-icon>
+                  </v-btn>
+                </template>
+                <template v-slot:item.delete="{ item }">
+                  <v-btn variant="flat" color="#CC3333">
+                    <svg-icon type="mdi" :path="mdiDeleteOutline" class="text-white"></svg-icon>
+                  </v-btn>
+                </template>
+              </v-data-table>
+            </div>
+          </div>
         </div>
       </div>
     </v-app>
   </main>
 </template>
-
-<script>
-import NavBar from "../components/NavBar.vue"
-import {
-  VDataTable,
-  VDataTableServer,
-  VDataTableVirtual,
-} from "vuetify/labs/VDataTable";
-
-export default {
-  components: {
-    NavBar: NavBar,
-    VDataTable,
-    VDataTableServer,
-    VDataTableVirtual,
-  },
-  data() {
-    return {
-      search: '',
-      headers: [
-        {
-          align: 'start',
-          key: 'name',
-          sortable: true,
-          title: 'Dessert (100g serving)',
-        },
-        { key: 'calories', title: 'Calories' },
-        { key: 'fat', title: 'Fat (g)' },
-        { key: 'carbs', title: 'Carbs (g)' },
-        { key: 'protein', title: 'Protein (g)' },
-        { key: 'iron', title: 'Iron (%)' },
-      ],
-      desserts: [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-          iron: 1,
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-          iron: 1,
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-          iron: 7,
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-          iron: 8,
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-          iron: 16,
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-          iron: 0,
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-          iron: 2,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          iron: 45,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          iron: 45,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          iron: 45,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          iron: 45,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: 22,
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: 6,
-        },
-      ],
-    }
-  },
-}
-</script>
