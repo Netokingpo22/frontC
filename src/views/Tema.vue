@@ -30,69 +30,53 @@ const options = {
 
 const { handleSubmit } = useForm({
   validationSchema: {
-    carerra(value) {
-      if (value) return true
-      return 'autocomplete an item.'
-    },
     nombre(value) {
       if (value?.length >= 1) return true
       return 'El nombré no puede estar vacío. '
     },
-    clave(value) {
-      if (value?.length >= 1) return true
-      return 'El nombré no puede estar vacío. '
-    },
-    creditosTeoricos(value) {
-      if (value?.length >= 1) return true
-      return 'El nombré no puede estar vacío. '
-    },
-    creditosPracticos(value) {
-      if (value?.length >= 1) return true
-      return 'El nombré no puede estar vacío. '
-    },
-    maestro(value) {
-      if (value)
-
-        return true
-      return 'autocomplete an item.'
-    },
-    competenciaGeneral(value) {
-      if (value?.length >= 1) return true
-      return 'El nombré no puede estar vacío. '
-    },
-    intencionDidactica(value) {
+    actividadEnseñanza(value) {
       if (value) return true
       return 'autocomplete an item.'
     },
-    caracterizacion(value) {
+    actividadAprendizaje(value) {
+      if (value) return true
+      return 'autocomplete an item.'
+    },
+    horasTeoria(value) {
       if (value?.length >= 1) return true
       return 'El nombré no puede estar vacío. '
     },
-    tipoMateria(value) {
+    horasPractica(value) {
       if (value?.length >= 1) return true
       return 'El nombré no puede estar vacío. '
     },
-    semestre(value) {
+    competenciaGenerica(value) {
+      if (value) return true
+      return 'autocomplete an item.'
+    },
+    Portafolio(value) {
       if (value?.length >= 1) return true
       return 'El nombré no puede estar vacío. '
+    },
+    instrumentoEvaluacion(value) {
+      if (value) return true
+      return 'autocomplete an item.'
     },
   },
 })
-const carerra = useField('carerra')
+
 const nombre = useField('nombre')
-const clave = useField('clave')
-const creditosTeoricos = useField('creditosTeoricos')
-const creditosPracticos = useField('creditosPracticos')
-const maestro = useField('maestro')
-const competenciaGeneral = useField('competenciaGeneral')
-const intencionDidactica = useField('intencionDidactica')
-const caracterizacion = useField('caracterizacion')
-const tipoMateria = useField('tipoMateria')
-const semestre = useField('semestre')
+const ActividadE = useField('actividadEnseñanza')
+const ActividadA = useField('actividadAprendizaje')
+const horasT = useField('horasTeoria')
+const horasP = useField('horasPractica')
+const competencia = useField('competenciaGenerica')
+const portafolio = useField('Portafolio')
+const instrumentoEvaluacion = useField('instrumentoEvaluacion')
+
 const submit = handleSubmit(values => {
-  values.maestro = maestrosMap.get(values.maestro);
   console.log(values);
-  fetch('http://127.0.0.1:8000/api/v1/Materia', {
+  fetch('http://127.0.0.1:8000/api/v1/Tema', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -107,7 +91,7 @@ const submit = handleSubmit(values => {
         return;
       }
       toast.success("Se ha iniciado sesión de manera correcta.", options);
-      hetMaterias();
+      getTema();
     })
     .catch((error) => {
       console.log(error);
@@ -119,12 +103,12 @@ const editarItem = ((param) => {
   console.log(param);
 })
 
+const itemTemas = ref([]);
+const itemActividadE = ref([]);
+const itemActividadA = ref([]);
+const itemCompetenciaG = ref([]);
+const itemInstrumentoE = ref([]);
 const no_results_text = "No se encontraron resultados";
-const materia = ref([]);
-const itemMaestro = ref([]);
-const maestrosMap = new Map();
-const itemCarreras = ref([]);
-const itemDidactica = ref([]);
 const search = ref('');
 const headers = [
   {
@@ -133,19 +117,20 @@ const headers = [
     sortable: true,
     title: 'Id',
   },
-  { key: 'carerra', title: 'Carerra' },
   { key: 'nombre', title: 'Nombre' },
-  { key: 'clave', title: 'Clave' },
-  { key: 'maestro', title: 'Maestro' },
-  { key: 'tipoMateria', title: 'Tipo materia' },
-  { key: 'semestre', title: 'Semestre' },
+  { key: 'horasTeoria', title: 'Teoria' },
+  { key: 'horasPractica', title: 'Practica' },
+  { key: 'actividadEnseñanza', title: 'Enseñanza' },
+  { key: 'actividadAprendizaje', title: 'Aprendizaje' },
+  { key: 'competenciaGenerica', title: 'competenciaGenerica' },
+  { key: 'instrumentoEvaluacion', title: 'Evaluacion' },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Elimianr', key: 'delete', sortable: false },
 ];
 
-async function hetMaterias() {
+async function getActividadE() {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/Materia', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/actividadEnseñanza', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -153,19 +138,15 @@ async function hetMaterias() {
       },
     });
     const data = await response.json();
-    for (let index = 0; index < data.length; index++) {
-      console.log(maestrosMap.get(data[index].maestro));
-      data[index].maestro = maestrosMap.get(data[index].maestro);
-    }
-    materia.value = data;
+    itemActividadE.value = data.map(item => item.id);
   } catch (error) {
     console.log(error);
     toast.error("Error : \nHa ocurrido un error en el servidor.", options);
   }
 }
-async function getCarreras() {
+async function getActividadA() {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/Carrera', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/actividadAprendizaje', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -173,15 +154,15 @@ async function getCarreras() {
       },
     });
     const data = await response.json();
-    itemCarreras.value = data.map(item => item.id);
+    itemActividadA.value = data.map(item => item.id);
   } catch (error) {
     console.log(error);
     toast.error("Error : \nHa ocurrido un error en el servidor.", options);
   }
 }
-async function getMaestros() {
+async function getCompetencias() {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/Maestro', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/competenciaGenerica', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -189,20 +170,15 @@ async function getMaestros() {
       },
     });
     const data = await response.json();
-    itemMaestro.value = data.map(item => (item.nombre + " " + item.apellido));
-    for (const item of data) {
-      maestrosMap.set((item.nombre + " " + item.apellido), item.id);
-      maestrosMap.set(item.id, (item.nombre + " " + item.apellido));
-    }
-    hetMaterias();
+    itemCompetenciaG.value = data.map(item => item.id);
   } catch (error) {
     console.log(error);
     toast.error("Error : \nHa ocurrido un error en el servidor.", options);
   }
 }
-async function getIDidactica() {
+async function getEvaluacion() {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/intencion_Didactica', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/instrumentoEvaluacion', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -210,15 +186,33 @@ async function getIDidactica() {
       },
     });
     const data = await response.json();
-    itemDidactica.value = data.map(item => item.id);
+    itemInstrumentoE.value = data.map(item => item.id);
   } catch (error) {
     console.log(error);
     toast.error("Error : \nHa ocurrido un error en el servidor.", options);
   }
 }
-onMounted(getIDidactica);
-onMounted(getMaestros);
-onMounted(getCarreras);
+async function getTema() {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/Tema', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem("token")
+      },
+    });
+    const data = await response.json();
+    itemTemas.value = data;
+  } catch (error) {
+    console.log(error);
+    toast.error("Error : \nHa ocurrido un error en el servidor.", options);
+  }
+}
+onMounted(getTema);
+onMounted(getActividadE);
+onMounted(getActividadA);
+onMounted(getCompetencias);
+onMounted(getEvaluacion);
 </script>
 
 <template>
@@ -232,34 +226,27 @@ onMounted(getCarreras);
           <div class="w-full">
             <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4 max-w-lg p-6">
               <form @submit.prevent="submit" class="flex flex-col justify-center items-center">
-                <p class="text-3xl p-2 mb-4">Agregar Materia</p>
-                <v-autocomplete v-model="carerra.value.value" :items="itemCarreras"
-                  :error-messages="carerra.errorMessage.value" label="Carrera" variant="outlined"
-                  class="w-full mb-3"></v-autocomplete>
+                <p class="text-3xl p-2 mb-4">Agregar Tema</p>
                 <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
                   variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="clave.value.value" :error-messages="clave.errorMessage.value" label="Clave"
-                  variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="creditosTeoricos.value.value" :error-messages="creditosTeoricos.errorMessage.value"
-                  label="Creditos Teoricos" variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="creditosPracticos.value.value"
-                  :error-messages="creditosPracticos.errorMessage.value" label="creditos Practicos" variant="outlined"
-                  class="w-full mb-3"></v-text-field>
-                <v-autocomplete v-model="maestro.value.value" :items="itemMaestro"
-                  :error-messages="maestro.errorMessage.value" label="Maestro" variant="outlined"
+                <v-autocomplete v-model="ActividadE.value.value" :items="itemActividadE"
+                  :error-messages="ActividadE.errorMessage.value" label="Actividad Enseñanza" variant="outlined"
                   class="w-full mb-3"></v-autocomplete>
-                <v-text-field v-model="competenciaGeneral.value.value"
-                  :error-messages="competenciaGeneral.errorMessage.value" label="Competencia General" variant="outlined"
-                  class="w-full mb-3"></v-text-field>
-                <v-autocomplete v-model="intencionDidactica.value.value" :items="itemDidactica"
-                  :error-messages="intencionDidactica.errorMessage.value" label="Didactica" variant="outlined"
+                <v-autocomplete v-model="ActividadA.value.value" :items="itemActividadA"
+                  :error-messages="ActividadA.errorMessage.value" label="Actividad Aprendizaje" variant="outlined"
                   class="w-full mb-3"></v-autocomplete>
-                <v-text-field v-model="caracterizacion.value.value" :error-messages="caracterizacion.errorMessage.value"
-                  label="Caracterizacion" variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="tipoMateria.value.value" :error-messages="tipoMateria.errorMessage.value"
-                  label="tipo de materia" variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
-                  label="Semestre" variant="outlined" class="w-full mb-3"></v-text-field>
+                <v-text-field v-model="horasT.value.value" :error-messages="horasT.errorMessage.value"
+                  label="Horas teoricas" variant="outlined" class="w-full mb-3"></v-text-field>
+                <v-text-field v-model="horasP.value.value" :error-messages="horasP.errorMessage.value"
+                  label="Horas practicas" variant="outlined" class="w-full mb-3"></v-text-field>
+                <v-autocomplete v-model="competencia.value.value" :items="itemCompetenciaG"
+                  :error-messages="competencia.errorMessage.value" label="Competencia generica" variant="outlined"
+                  class="w-full mb-3"></v-autocomplete>
+                <v-text-field v-model="portafolio.value.value" :error-messages="portafolio.errorMessage.value"
+                  label="Portafolio" variant="outlined" class="w-full mb-3"></v-text-field>
+                <v-autocomplete v-model="instrumentoEvaluacion.value.value" :items="itemInstrumentoE"
+                  :error-messages="instrumentoEvaluacion.errorMessage.value" label="Instrumento de evaluacion" variant="outlined"
+                  class="w-full mb-3"></v-autocomplete>
                 <v-btn class="text-none w-full" color="#1abc9c" variant="flat" type="submit">
                   <p class=" font-bold">Agregar</p>
                 </v-btn>
@@ -268,14 +255,14 @@ onMounted(getCarreras);
             <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4">
               <div class="flex mt-3 justify-between align-middle">
                 <v-card-title>
-                  <p class="text-3xl pt-2 pl-4">Materias</p>
+                  <p class="text-3xl pt-2 pl-4">Tema</p>
                 </v-card-title>
                 <v-card-title>
                   <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details
                     variant="outlined" class="min-w-[400px]"></v-text-field>
                 </v-card-title>
               </div>
-              <v-data-table :headers="headers" :items="materia" :search="search" class="px-6"
+              <v-data-table :headers="headers" :items="itemTemas" :search="search" class="px-6"
                 :no-data-text="no_results_text">
                 <template v-slot:item.edit="{ item }">
                   <v-btn variant="flat" color="#FFCC33" @click="editarItem(item)">

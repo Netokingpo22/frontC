@@ -34,27 +34,12 @@ const { handleSubmit } = useForm({
       if (value?.length >= 1) return true
       return 'El nombré no puede estar vacío. '
     },
-    apellido(value) {
-      if (value?.length >= 1) return true
-      return 'El apellido no puede estar vacío. '
-    },
-    matricula(value) {
-      if (value?.length >= 1) return true
-      return 'La matricula no puede estar vacío. '
-    },
-    genero(value) {
-      if (value?.length >= 1) return true
-      return 'El genero no puede estar vacío. '
-    },
   },
 })
 const nombre = useField('nombre')
-const apellido = useField('apellido')
-const matricula = useField('matricula')
-const genero = useField('genero')
 const submit = handleSubmit(values => {
   console.log(values);
-  fetch('http://127.0.0.1:8000/api/v1/Alumno', {
+  fetch('http://127.0.0.1:8000/api/v1/intencion_Didactica', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,7 +54,7 @@ const submit = handleSubmit(values => {
         return;
       }
       toast.success("Se ha iniciado sesión de manera correcta.", options);
-      getAlumnos();
+      getIDidactica();
     })
     .catch((error) => {
       console.log(error);
@@ -82,7 +67,7 @@ const editarItem = ((param) => {
 })
 
 const no_results_text = "No se encontraron resultados";
-const alumnos = ref([]);
+const didacticas = ref([]);
 const search = ref('');
 const headers = [
   {
@@ -92,16 +77,13 @@ const headers = [
     title: 'Id',
   },
   { key: 'nombre', title: 'Nombre' },
-  { key: 'apellido', title: 'Apellido' },
-  { key: 'matricula', title: 'Matricula' },
-  { key: 'genero', title: 'Genero' },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Elimianr', key: 'delete', sortable: false },
 ];
 
-async function getAlumnos() {
+async function getIDidactica() {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/Alumno', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/intencion_Didactica', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -109,13 +91,13 @@ async function getAlumnos() {
       },
     });
     const data = await response.json();
-    alumnos.value = data;
+    didacticas.value = data;
   } catch (error) {
     console.log(error);
     toast.error("Error : \nHa ocurrido un error en el servidor.", options);
   }
 }
-onMounted(getAlumnos);
+onMounted(getIDidactica);
 </script>
 
 <template>
@@ -129,14 +111,8 @@ onMounted(getAlumnos);
           <div class="w-full">
             <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4 max-w-lg p-6">
               <form @submit.prevent="submit" class="flex flex-col justify-center items-center">
-                <p class="text-3xl p-2 mb-4">Agregar Alumno</p>
+                <p class="text-3xl p-2 mb-4">Agregar intencion Didactica</p>
                 <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
-                  variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="apellido.value.value" :error-messages="apellido.errorMessage.value"
-                  label="Apellido" variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="matricula.value.value" :error-messages="matricula.errorMessage.value"
-                  label="Matricula" variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="genero.value.value" :error-messages="genero.errorMessage.value" label="Genero"
                   variant="outlined" class="w-full mb-3"></v-text-field>
                 <v-btn class="text-none w-full" color="#1abc9c" variant="flat" type="submit">
                   <p class=" font-bold">Agregar</p>
@@ -146,14 +122,14 @@ onMounted(getAlumnos);
             <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4">
               <div class="flex mt-3 justify-between align-middle">
                 <v-card-title>
-                  <p class="text-3xl pt-2 pl-4">Alumnos</p>
+                  <p class="text-3xl pt-2 pl-4">intencion Didactica</p>
                 </v-card-title>
                 <v-card-title>
                   <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details
                     variant="outlined" class="min-w-[400px]"></v-text-field>
                 </v-card-title>
               </div>
-              <v-data-table :headers="headers" :items="alumnos" :search="search" class="px-6"
+              <v-data-table :headers="headers" :items="didacticas" :search="search" class="px-6"
                 :no-data-text="no_results_text">
                 <template v-slot:item.edit="{ item }">
                   <v-btn variant="flat" color="#FFCC33" @click="editarItem(item)">
