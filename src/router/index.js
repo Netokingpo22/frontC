@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LogIn from '../views/LogIn.vue'
+import Registro from '../views/Registro.vue'
 import Carrera from '../views/Carrera.vue'
 import Materia from '../views/Materia.vue'
 import Maestro from '../views/Maestro.vue'
@@ -28,6 +29,11 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LogIn
+    },
+    {
+      path: '/registro',
+      name: 'registro',
+      component: Registro
     },
     {
       path: '/carrera',
@@ -129,8 +135,8 @@ const router = createRouter({
       name: 'AlumnoTemaClase',
       component: AlumnoTemaClase
     },
-    { path: "/", redirect: '/carrera' },
-    { path: '/:pathMatch(.*)', redirect: '/carrera' },
+    { path: "/", redirect: '/login' },
+    { path: '/:pathMatch(.*)', redirect: '/login' },
   ]
 })
 

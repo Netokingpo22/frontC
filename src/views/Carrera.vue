@@ -1,78 +1,61 @@
 <script setup>
-import { useToast } from "vue-toastification";
-import { useRouter } from 'vue-router';
-
-import { useField, useForm } from 'vee-validate'
-
-import { ref, onMounted } from 'vue'
-import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiDeleteOutline, mdiFileEditOutline } from '@mdi/js';
-
-import NavBar from "../components/NavBar.vue"
 import { VDataTable } from "vuetify/labs/VDataTable";
+import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue'
+import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, mdiPlusCircle } from '@mdi/js';
+import SvgIcon from '@jamescoyle/vue-icon';
+import toastification from '../composable/toastification'
+import carreraApi from '../Api/carreraApi';
+import carreraValidate from '../validates/carreraValidate'
+import DialogAdd from '../components/DialogAdd.vue'
 
 const router = useRouter()
-const toast = useToast();
-const options = {
-  position: "top-right",
-  timeout: 5000,
-  closeOnClick: true,
-  pauseOnFocusLoss: true,
-  pauseOnHover: true,
-  draggable: true,
-  draggablePercent: 0.6,
-  showCloseButtonOnHover: false,
-  hideProgressBar: false,
-  closeButton: "button",
-  icon: true,
-  rtl: false
-};
+const { option, useToast } = toastification();
+const { setCarrera, getCarreras } = carreraApi(router);
+const { nombre, siglas, handleSubmit, reset } = carreraValidate();
+const dialogAdd = ref(false);
+const dialog = ref(false);
+const isUp = ref(false);
+const isDel = ref(false);
 
-const { handleSubmit } = useForm({
-  validationSchema: {
-    nombre(value) {
-      if (value?.length >= 1) return true
-      return 'El nombré no puede estar vacío. '
-    },
-    siglas(value) {
-      if (value?.length >= 1) return true
-      return 'Las siglas no puede estar vacío. '
-    },
-  },
+const postCarrera = handleSubmit(values => {
+  reLoad(values)
 })
-const nombre = useField('nombre')
-const siglas = useField('siglas')
-const submit = handleSubmit(values => {
-  fetch('http://127.0.0.1:8000/api/v1/Carrera', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem("token")
-    },
-    body: JSON.stringify(values),
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (data.detail == "Not found.") {
-        toast.error("Error : \nEl usuario o la contraseña no son correctos", options);
-        return;
-      }
-      toast.success("Se ha iniciado sesión de manera correcta.", options);
-      getCarreras();
-    })
-    .catch((error) => {
-      console.log(error);
-      toast.error("Error : \nHa ocurrido un error en el servidor.", options);
-    });
+const editCarrera = handleSubmit(values => {
+  console.log(values);
 })
 
-const editarItem = ((param) => {
+const deleteCarrera = handleSubmit(values => {
+})
+
+async function reLoad(values) {
+  const data = await setCarrera(values);
+  if (data) {
+    dialogOpen.value = false;
+    reset();
+    useToast.success("Se ha agregado una nueva carrera.", option);
+    const updatedCarreras = await getCarreras();
+    carreras.value = updatedCarreras;
+  }
+}
+
+function editeItem(param) {
+  reset();
+  isUp.value = true;
+  carreraId.value = param.id
+  nombre.value.value = param.nombre
+  siglas.value.value = param.siglas
+}
+
+function deleteItem(param) {
+  isDel.value = true;
+  nombre.value.value = param.nombre
   console.log(param);
-})
-
-const no_results_text = "No se encontraron resultados";
+}
+//Table fill ------------------------------------------
 const carreras = ref([]);
 const search = ref('');
+const carreraId = ref('');
 const headers = [
   {
     align: 'start',
@@ -82,75 +65,123 @@ const headers = [
   },
   { key: 'nombre', title: 'Nombre' },
   { key: 'siglas', title: 'Siglas' },
+  { title: 'Acceder', key: 'acceder', sortable: false },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Elimianr', key: 'delete', sortable: false },
 ];
-
-async function getCarreras() {
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/Carrera', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem("token")
-      },
-    });
-    const data = await response.json();
-    carreras.value = data;
-  } catch (error) {
-    console.log(error);
-    toast.error("Error : \nHa ocurrido un error en el servidor.", options);
-  }
+async function fillTable() {
+  const data = await getCarreras();
+  carreras.value = data;
 }
-onMounted(getCarreras);
+onMounted(fillTable);
+//-----------------------------------------------------
 </script>
 
 <template>
   <main>
     <v-app>
-      <div class="flex min-h-screen">
-        <div class="bg-slate-800 w-fit">
-          <NavBar></NavBar>
-        </div>
-        <div class="flex flex-col w-full align-top">
-          <div class="w-full">
-            <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4 max-w-lg p-6">
-              <form @submit.prevent="submit" class="flex flex-col justify-center items-center">
-                <p class="text-3xl p-2 mb-4">Agregar Carrera</p>
-                <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
-                  variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-text-field v-model="siglas.value.value" :error-messages="siglas.errorMessage.value" label="Siglas"
-                  variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-btn class="text-none w-full" color="#1abc9c" variant="flat" type="submit">
-                  <p class=" font-bold">Agregar</p>
-                </v-btn>
-              </form>
-            </div>
-            <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4">
-              <div class="flex mt-3 justify-between align-middle">
-                <v-card-title>
-                  <p class="text-3xl pt-2 pl-4">Carreras</p>
-                </v-card-title>
-                <v-card-title>
-                  <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details
-                    variant="outlined" class="min-w-[400px]"></v-text-field>
-                </v-card-title>
-              </div>
-              <v-data-table :headers="headers" :items="carreras" :search="search" class="px-6"
-                :no-data-text="no_results_text">
-                <template v-slot:item.edit="{ item }">
-                  <v-btn variant="flat" color="#FFCC33" @click="editarItem(item)">
-                    <svg-icon type="mdi" :path="mdiFileEditOutline" class="text-white"></svg-icon>
-                  </v-btn>
-                </template>
-                <template v-slot:item.delete="{ item }">
-                  <v-btn variant="flat" color="#CC3333">
-                    <svg-icon type="mdi" :path="mdiDeleteOutline" class="text-white"></svg-icon>
-                  </v-btn>
-                </template>
-              </v-data-table>
-            </div>
+      <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
+        <div class="pt-5"></div>
+        <DialogAdd :dialogAddOpen="dialogAdd" :tittle="'Agregar carrera'">
+          <form @submit.prevent="postCarrera" class="flex flex-col justify-center items-center">
+            <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
+              variant="outlined" class="w-full mb-2"></v-text-field>
+            <v-text-field v-model="siglas.value.value" :error-messages="siglas.errorMessage.value" label="Siglas"
+              variant="outlined" class="w-full mb-2"></v-text-field>
+            <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+            <v-btn class="text-none w-full my-1" variant="outlined" type="submit" prepend-icon="mdi-plus">
+              <p class=" font-bold">Agregar</p>
+            </v-btn>
+          </form>
+        </DialogAdd>
+        <!-- Tabla---------------------------------------- -->
+        <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-3/5 h-fit">
+          <div class="flex mt-1 justify-between align-middle">
+            <v-card-title>
+              <p class="text-xl pt-3 pl-3">Carreras</p>
+            </v-card-title>
+            <v-card-title>
+              <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details
+                variant="outlined" class="min-w-[300px]"></v-text-field>
+            </v-card-title>
           </div>
+          <div class="h-[2px] bg-slate-800 mb-1"></div>
+          <v-data-table :headers="headers" :items="carreras" :search="search"
+            :no-data-text="'No se encontraron resultados'" :items-per-page-text="'Items por pagina'"
+            class="max-h-[650px] min-h-[650px]" :items-per-page="10">
+
+            <template v-slot:item.acceder="{ item }">
+              <v-btn variant="outlined" color="#29cc6d" @click="editeItem(item)" class="max-h-[25px]">
+                <svg-icon type="mdi" :path="mdiClipboardArrowRightOutline"
+                  class="text-[#29cc6d]  max-w-[20px]"></svg-icon>
+              </v-btn>
+            </template>
+
+            <template v-slot:item.edit="{ item }">
+              <v-btn variant="outlined" color="#cca329" @click="editeItem(item)" class="max-h-[25px]">
+                <svg-icon type="mdi" :path="mdiFileEditOutline" class="text-[#cca329]  max-w-[20px]"></svg-icon>
+              </v-btn>
+              <v-dialog v-model="isUp" class="w-[500px]">
+                <v-card>
+                  <v-card-text class="bg-slate-200 text-slate-800">
+                    <div>
+                      <h1 class="text-center text-2xl font-bold antialiased">Editar carrera</h1>
+                    </div>
+                    <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                    <div class="flex flex-col mt-6 mx-6 pb-2">
+                      <form @submit.prevent="postCarrera" class="flex flex-col justify-center items-center">
+                        <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value"
+                          label="Nombre" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-text-field v-model="siglas.value.value" :error-messages="siglas.errorMessage.value"
+                          label="Siglas" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                        <v-btn color="#cca329" class="text-none w-full my-1 mt-4" variant="outlined"
+                          @click="isUp = false">
+                          <p class=" font-bold">Editar</p>
+                        </v-btn>
+                        <v-btn class="text-none w-full my-1" variant="outlined" @click="isUp = false">
+                          <p class=" font-bold">Cancelar</p>
+                        </v-btn>
+                      </form>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </template>
+
+            <template v-slot:item.delete="{ item }">
+              <v-btn variant="outlined" color="#cc2929" @click="deleteItem(item)" class="max-h-[25px]">
+                <svg-icon type="mdi" :path="mdiDeleteOutline" class="text-[#cc2929]  max-w-[20px]"></svg-icon>
+              </v-btn>
+              <v-dialog v-model="isDel" width="auto" max-width="500">
+                <v-card>
+                  <v-card-text class="bg-slate-200 text-slate-800">
+                    <div>
+                      <h1 class="text-center text-2xl font-bold antialiased">Eliminar carrera</h1>
+                    </div>
+                    <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                    <div class="flex flex-col mt-6 mx-6 pb-2">
+                      <form @submit.prevent="postCarrera" class="flex flex-col justify-center items-center">
+                        <h1>¿Seguro que desea eliminar "{{ nombre.value.value }}"?</h1>
+                        <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                        <v-btn color="#cc2929" class="text-none w-full my-1 mt-4" variant="outlined"
+                          @click="isDel = false">
+                          <p class=" font-bold">Eliminar</p>
+                        </v-btn>
+                        <v-btn class="text-none w-full my-1" variant="outlined" @click="isDel = false">
+                          <p class=" font-bold">Cancelar</p>
+                        </v-btn>
+                      </form>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </template>
+
+            <template v-slot:footer>
+              <v-pagination v-model="page" :length="pages"></v-pagination>
+            </template>
+          </v-data-table>
         </div>
       </div>
     </v-app>
