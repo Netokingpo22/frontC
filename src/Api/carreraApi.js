@@ -4,17 +4,19 @@ import toastification from '../composable/toastification'
 const { option, useToast } = toastification();
 
 const carreraApi = () => {
-    const APIURL = 'http://127.0.0.1:8000/api/v1/Carrera';
+    const APIURL = 'http://127.0.0.1:8000/api/v1/Carrera/';
 
-    function setCarrera(values) {
-        return axios.post(APIURL, values, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem("token")
-            },
-        }).then(() => {
+    async function setCarrera(values) {
+        console.log(values);
+        try {
+            await axios.post(APIURL, values, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
             return true;
-        }).catch((error) => {
+        } catch (error) {
             console.log(error);
             if (error.code == "ERR_NETWORK") {
                 useToast.error("Error en el servidor", option);
@@ -22,18 +24,19 @@ const carreraApi = () => {
             }
             useToast.error("Algo salio mal", option);
             return false;
-        });
+        }
     }
 
-    function getCarreras() {
-        return axios.get(APIURL, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem("token")
-            },
-        }).then(response => {
+    async function getCarreras() {
+        try {
+            const response = await axios.get(APIURL, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
             return response.data;
-        }).catch((error) => {
+        } catch (error) {
             if (error.code == "ERR_NETWORK") {
                 useToast.error("Error en el servidor", option);
                 return;
@@ -42,18 +45,19 @@ const carreraApi = () => {
                 useToast.error("El usuario ya existe", option);
                 return;
             }
-        });
+        }
     }
 
-    function editCarrera(id, values) {
-        return axios.put(`${APIURL}/${id}`, values, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem("token")
-            },
-        }).then(() => {
+    async function editCarrera(id, values) {
+        try {
+            await axios.put(APIURL + id + '/', values, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
             return true;
-        }).catch((error) => {
+        } catch (error) {
             console.log(error);
             if (error.code == "ERR_NETWORK") {
                 useToast.error("Error en el servidor", option);
@@ -61,18 +65,19 @@ const carreraApi = () => {
             }
             useToast.error("Algo salio mal", option);
             return false;
-        });
+        }
     }
 
-    function deleteCarrera(id) {
-        return axios.delete(`${APIURL}/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem("token")
-            },
-        }).then(() => {
+    async function deleteCarrera(id) {
+        try {
+            await axios.delete(APIURL + id + '/', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
             return true;
-        }).catch((error) => {
+        } catch (error) {
             console.log(error);
             if (error.code == "ERR_NETWORK") {
                 useToast.error("Error en el servidor", option);
@@ -80,11 +85,11 @@ const carreraApi = () => {
             }
             useToast.error("Algo salio mal", option);
             return false;
-        });
+        }
     }
-
     return {
         setCarrera, getCarreras, editCarrera, deleteCarrera
     }
 }
+
 export default carreraApi
