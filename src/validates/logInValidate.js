@@ -4,7 +4,6 @@ const logInValidate = () => {
     const { handleSubmit } = useForm({
         validationSchema: {
             username(value) {
-                console.log();
                 if (value?.length >= 1) return true
                 return 'El nombré no puede estar vacío. '
             },

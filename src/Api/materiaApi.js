@@ -4,7 +4,7 @@ import toastification from '../composable/toastification'
 const { option, useToast } = toastification();
 
 const carreraApi = () => {
-    const APIURL = 'http://127.0.0.1:8000/api/v1/Carrera/';
+    const APIURL = 'http://127.0.0.1:8000/api/v1/Materia';
 
     async function setCarrera(values) {
         try {
@@ -25,7 +25,28 @@ const carreraApi = () => {
         }
     }
 
-    async function getCarreras() {
+    async function getMateria(pk) {
+        try {
+            const response = await axios.get(APIURL + pk + '/', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
+            return response.data;
+        } catch (error) {
+            if (error.code == "ERR_NETWORK") {
+                useToast.error("Error en el servidor", option);
+                return;
+            }
+            if (error.response.data.detail == "not found") {
+                useToast.error("La materia no existe", option);
+                return;
+            }
+        }
+    }
+
+    async function getMaterias() {
         try {
             const response = await axios.get(APIURL, {
                 headers: {
@@ -39,8 +60,29 @@ const carreraApi = () => {
                 useToast.error("Error en el servidor", option);
                 return;
             }
-            if (error.response.data.detail == "found") {
-                useToast.error("La carrera ya existe", option);
+            if (error.response.data.detail == "not found") {
+                useToast.error("Las materias no existen", option);
+                return;
+            }
+        }
+    }
+
+    async function getMateriasByCarrera(carrera_pk) {
+        try {
+            const response = await axios.get(APIURL + 'carrera/' + carrera_pk + '/', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
+            return response.data;
+        } catch (error) {
+            if (error.code == "ERR_NETWORK") {
+                useToast.error("Error en el servidor", option);
+                return;
+            }
+            if (error.response.data.detail == "not found") {
+                useToast.error("Las materias para esta carrera no existen", option);
                 return;
             }
         }
@@ -84,7 +126,7 @@ const carreraApi = () => {
         }
     }
     return {
-        setCarrera, getCarreras, editCarrera, deleteCarrera
+        setCarrera, getMateria, getMaterias, getMateriasByCarrera, editCarrera, deleteCarrera
     }
 }
 

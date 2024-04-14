@@ -19,7 +19,6 @@ const logInApi = (router) => {
             useToast.success("Se ha iniciado sesión de manera correcta.", option);
             router.push('/carrera')
         }).catch((error) => {
-            console.log(error);
             if (error.code == "ERR_NETWORK") {
                 useToast.error("Error en el servidor", option);
                 return;

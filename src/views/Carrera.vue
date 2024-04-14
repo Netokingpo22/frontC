@@ -1,7 +1,7 @@
 <script setup>
 import { VDataTable } from "vuetify/labs/VDataTable";
 import { useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeMount } from 'vue'
 import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, mdiPlusCircle } from '@mdi/js';
 import SvgIcon from '@jamescoyle/vue-icon';
 import toastification from '../composable/toastification'
@@ -56,6 +56,14 @@ async function apiDel() {
   }
 }
 
+function pushMaestros(){
+  router.push('/maestro')
+}
+
+function pushCarreras(){
+  router.push('/carrera')
+}
+
 function addItem() {
   reset();
   isAdd.value = true;
@@ -67,6 +75,18 @@ function editeItem(param) {
   carreraId.value = param.id
   nombre.value.value = param.nombre
   siglas.value.value = param.siglas
+}
+
+function access(param) {
+  localStorage.setItem("carrera", JSON.stringify({
+    cId: param.id,
+    cNombre: param.nombre,
+    cSiglas: param.siglas,
+  }));
+  carreraId.value = param.id
+  nombre.value.value = param.nombre
+  siglas.value.value = param.siglas
+  router.push('/materia')
 }
 
 function deleteItem(param) {
@@ -95,7 +115,7 @@ async function fillTable() {
   const data = await getCarreras();
   carreras.value = data;
 }
-onMounted(fillTable);
+onBeforeMount(fillTable);
 //-----------------------------------------------------
 </script>
 
@@ -103,6 +123,14 @@ onMounted(fillTable);
   <main>
     <v-app>
       <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
+        <div class="flex flex-row justify-center items-center">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushCarreras()">
+            <p class=" font-bold">Carreras</p>
+          </v-btn>
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushMaestros()">
+            <p class=" font-bold">Maestros</p>
+          </v-btn>
+        </div>
         <div class="pt-5"></div>
         <v-btn variant="outlined" @click="addItem()" class="max-h-[35px]" style="text-transform: none;">
           <p class="font-bold">Agregar</p>
@@ -149,7 +177,7 @@ onMounted(fillTable);
             class="max-h-[650px] min-h-[650px]" :items-per-page="10">
 
             <template v-slot:item.acceder="{ item }">
-              <v-btn variant="outlined" color="#29cc6d" @click="editeItem(item)" class="max-h-[25px]">
+              <v-btn variant="outlined" color="#29cc6d" @click="access(item)" class="max-h-[25px]">
                 <svg-icon type="mdi" :path="mdiClipboardArrowRightOutline"
                   class="text-[#29cc6d]  max-w-[20px]"></svg-icon>
               </v-btn>

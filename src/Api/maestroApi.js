@@ -3,10 +3,19 @@ import toastification from '../composable/toastification'
 
 const { option, useToast } = toastification();
 
-const carreraApi = () => {
-    const APIURL = 'http://127.0.0.1:8000/api/v1/Carrera/';
+const maestroApi = () => {
+    const APIURL = 'http://127.0.0.1:8000/api/v1/Maestro/';
 
-    async function setCarrera(values) {
+    async function setMaestro(values) {
+        if (values.tipoEstudios === "Licenciatura") {
+            values.tipoEstudios = "L";
+        } else if (values.tipoEstudios === "Maestria") {
+            values.tipoEstudios = "M";
+        } else if (values.tipoEstudios === "Doctorado") {
+            values.tipoEstudios = "D";
+        } else if (values.tipoEstudios === "Post Doctorado") {
+            values.tipoEstudios = "P";
+        }
         try {
             await axios.post(APIURL, values, {
                 headers: {
@@ -25,7 +34,7 @@ const carreraApi = () => {
         }
     }
 
-    async function getCarreras() {
+    async function getMaestros() {
         try {
             const response = await axios.get(APIURL, {
                 headers: {
@@ -40,13 +49,22 @@ const carreraApi = () => {
                 return;
             }
             if (error.response.data.detail == "found") {
-                useToast.error("La carrera ya existe", option);
+                useToast.error("El usuario ya existe", option);
                 return;
             }
         }
     }
 
-    async function editCarrera(id, values) {
+    async function editMaestro(id, values) {
+        if (values.tipoEstudios === "Licenciatura") {
+            values.tipoEstudios = "L";
+        } else if (values.tipoEstudios === "Maestria") {
+            values.tipoEstudios = "M";
+        } else if (values.tipoEstudios === "Doctorado") {
+            values.tipoEstudios = "D";
+        } else if (values.tipoEstudios === "Post Doctorado") {
+            values.tipoEstudios = "P";
+        }
         try {
             await axios.put(APIURL + id + '/', values, {
                 headers: {
@@ -65,7 +83,7 @@ const carreraApi = () => {
         }
     }
 
-    async function deleteCarrera(id) {
+    async function deleteMaestro(id) {
         try {
             await axios.delete(APIURL + id + '/', {
                 headers: {
@@ -84,8 +102,8 @@ const carreraApi = () => {
         }
     }
     return {
-        setCarrera, getCarreras, editCarrera, deleteCarrera
+        setMaestro, getMaestros, editMaestro, deleteMaestro
     }
 }
 
-export default carreraApi
+export default maestroApi
