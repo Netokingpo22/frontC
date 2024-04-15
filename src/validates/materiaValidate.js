@@ -60,7 +60,6 @@ const materiaValidate = () => {
     const tipoMateria = useField('tipoMateria')
     const semestre = useField('semestre')
     const reset = () => {
-        carerra.resetField();
         nombre.resetField();
         clave.resetField();
         creditosTeoricos.resetField();

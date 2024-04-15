@@ -6,15 +6,20 @@ import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, md
 import SvgIcon from '@jamescoyle/vue-icon';
 import toastification from '../composable/toastification'
 import materiaApi from '../Api/materiaApi';
+import maestroApi from '../Api/maestroApi';
+import intencionDidacticaApi from '../Api/intDidacticaApi';
 import materiaValidate from '../validates/materiaValidate'
 
 const router = useRouter()
 const { option, useToast } = toastification();
-const { setMateria, getMaterias, editMateria, deleteMateria } = materiaApi(router);
-const { nombre, clave, creditosTeoricos, creditosPracticos, maestro, competenciaGeneral, intencionDidactica, caracterizacion, tipoMateria, semestre, handleSubmit, reset } = materiaValidate();
+const { setMateria, getMateria, getMaterias, getMateriasByCarrera, editMateria, deleteMateria } = materiaApi(router);
+const { getMaestros } = maestroApi(router);
+const { getIntencionDidactica } = intencionDidacticaApi(router);
+const { carerra, nombre, clave, creditosTeoricos, creditosPracticos, maestro, competenciaGeneral, intencionDidactica, caracterizacion, tipoMateria, semestre, handleSubmit, reset } = materiaValidate();
 const isAdd = ref(false);
 const isUp = ref(false);
 const isDel = ref(false);
+const carreaNombre = JSON.parse(localStorage.getItem("carrera")).cNombre + " (" + JSON.parse(localStorage.getItem("carrera")).cSiglas + ")"
 
 const postMateria = handleSubmit(values => {
   apiPost(values)
@@ -25,7 +30,7 @@ async function apiPost(values) {
     isAdd.value = false;
     reset();
     useToast.success("Se ha agregado una nueva materia.", option);
-    const updatedMaterias = await getMaterias();
+    const updatedMaterias = await getMateriasByCarrera(JSON.parse(localStorage.getItem("carrera")).cId);
     materias.value = updatedMaterias;
   }
 }
@@ -40,7 +45,7 @@ async function apiPut(values) {
     isUp.value = false;
     reset();
     useToast.success("Se ha editado una materia.", option);
-    const updatedMaterias = await getMaterias();
+    const updatedMaterias = await getMateriasByCarrera(JSON.parse(localStorage.getItem("carrera")).cId);
     materias.value = updatedMaterias;
   }
 }
@@ -51,7 +56,7 @@ async function apiDel() {
     isDel.value = false;
     reset();
     useToast.success("Se ha eliminado una materia.", option);
-    const updatedMaterias = await getMaterias();
+    const updatedMaterias = await getMateriasByCarrera(JSON.parse(localStorage.getItem("carrera")).cId);
     materias.value = updatedMaterias;
   }
 }
@@ -63,6 +68,11 @@ function pushMaterias() {
 function pushIntDiactica() {
   router.push('/intDidactica')
 }
+
+function pushCarreras() {
+  router.push('/carrera')
+}
+
 function addItem() {
   reset();
   isAdd.value = true;
@@ -91,6 +101,8 @@ function deleteItem(param) {
 }
 //Table fill ------------------------------------------
 const materias = ref([]);
+const maestros = ref([]);
+const intenciones = ref([]);
 const search = ref('');
 const materiaId = ref('');
 const headers = [
@@ -114,10 +126,20 @@ const headers = [
   { title: 'Eliminar', key: 'delete', sortable: false },
 ];
 async function fillTable() {
-  const data = await getMaterias();
+  const data = await getMateriasByCarrera(JSON.parse(localStorage.getItem("carrera")).cId);
   materias.value = data;
+  carerra.value.value = JSON.parse(localStorage.getItem("carrera")).cId
+;}
+async function fillAutocompletes() {
+  const maes = await getMaestros();
+  const processedMaes = maes.map(maestro => maestro.id + " - " + maestro.nombre + " " + maestro.apellido);
+  maestros.value = processedMaes;
+  const inte = await getIntencionDidactica();
+  const processedInte = inte.map(intecion => intecion.id + " - " + intecion.nombre);
+  intenciones.value = processedInte;
 }
 onBeforeMount(fillTable);
+onBeforeMount(fillAutocompletes);
 //-----------------------------------------------------
 </script>
 
@@ -126,6 +148,9 @@ onBeforeMount(fillTable);
     <v-app>
       <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
         <div class="flex flex-row justify-center items-center">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushCarreras()">
+            <p class=" font-bold">Atras</p>
+          </v-btn>
           <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushMaterias()">
             <p class=" font-bold">Materias</p>
           </v-btn>
@@ -156,14 +181,13 @@ onBeforeMount(fillTable);
                   <v-text-field v-model="creditosPracticos.value.value"
                     :error-messages="creditosPracticos.errorMessage.value" label="Creditos Practicos" variant="outlined"
                     class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="maestro.value.value" :error-messages="maestro.errorMessage.value"
-                    label="Maestro" variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="maestro.value.value" :error-messages="maestro.errorMessage.value"
+                    label="Maestro" variant="outlined" class="w-full mb-2" :items="maestros"></v-autocomplete>
                   <v-text-field v-model="competenciaGeneral.value.value"
                     :error-messages="competenciaGeneral.errorMessage.value" label="Competencia General"
                     variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="intencionDidactica.value.value"
-                    :error-messages="intencionDidactica.errorMessage.value" label="Intencion Didactica"
-                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="intencionDidactica.value.value" :error-messages="intencionDidactica.errorMessage.value"
+                    label="Intencion Didactica" variant="outlined" class="w-full mb-2" :items="intenciones"></v-autocomplete>
                   <v-text-field v-model="caracterizacion.value.value"
                     :error-messages="caracterizacion.errorMessage.value" label="Caracterizacion" variant="outlined"
                     class="w-full mb-2"></v-text-field>
@@ -188,7 +212,7 @@ onBeforeMount(fillTable);
         <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-11/12 h-fit">
           <div class="flex mt-1 justify-between align-middle">
             <v-card-title>
-              <p class="text-xl pt-3 pl-3">Materias</p>
+              <p class="text-xl pt-3 pl-3">{{ carreaNombre }} / Materias</p>
             </v-card-title>
             <v-card-title>
               <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details

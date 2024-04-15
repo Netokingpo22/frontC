@@ -3,10 +3,12 @@ import toastification from '../composable/toastification'
 
 const { option, useToast } = toastification();
 
-const carreraApi = () => {
+const materiaApi = () => {
     const APIURL = 'http://127.0.0.1:8000/api/v1/Materia';
 
-    async function setCarrera(values) {
+    async function setMateria(values) {
+        values.maestro = values.maestro.match(/^\d+/)[0];
+        values.intencionDidactica = values.intencionDidactica.match(/^\d+/)[0];
         try {
             await axios.post(APIURL, values, {
                 headers: {
@@ -69,12 +71,18 @@ const carreraApi = () => {
 
     async function getMateriasByCarrera(carrera_pk) {
         try {
-            const response = await axios.get(APIURL + 'carrera/' + carrera_pk + '/', {
+            const response = await axios.get(APIURL + '/carrera/' + carrera_pk + '/', {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")
                 },
             });
+            const processedData = response.data.map(materia => ({
+              ...materia,
+              maestro: materia.maestro.nombre_completo,
+              intencionDidactica: materia.intencionDidactica.nombre
+            }));
+            response.data = processedData;
             return response.data;
         } catch (error) {
             if (error.code == "ERR_NETWORK") {
@@ -88,7 +96,7 @@ const carreraApi = () => {
         }
     }
 
-    async function editCarrera(id, values) {
+    async function editMateria(id, values) {
         try {
             await axios.put(APIURL + id + '/', values, {
                 headers: {
@@ -107,7 +115,7 @@ const carreraApi = () => {
         }
     }
 
-    async function deleteCarrera(id) {
+    async function deleteMateria(id) {
         try {
             await axios.delete(APIURL + id + '/', {
                 headers: {
@@ -126,8 +134,8 @@ const carreraApi = () => {
         }
     }
     return {
-        setCarrera, getMateria, getMaterias, getMateriasByCarrera, editCarrera, deleteCarrera
+        setMateria, getMateria, getMaterias, getMateriasByCarrera, editMateria, deleteMateria
     }
 }
 
-export default carreraApi
+export default materiaApi
