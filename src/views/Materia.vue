@@ -39,7 +39,7 @@ const putMateria = handleSubmit(values => {
   apiPut(values)
 })
 async function apiPut(values) {
-  let newValues = { nombre: values.nombre, clave: values.clave, creditosTeoricos: values.creditosTeoricos, creditosPracticos: values.creditosPracticos, maestro: values.maestro, competenciaGeneral: values.competenciaGeneral, intencionDidactica: values.intencionDidactica, caracterizacion: values.caracterizacion, tipoMateria: values.tipoMateria, semestre: values.semestre };
+  let newValues = { carerra: values.carerra, nombre: values.nombre, clave: values.clave, creditosTeoricos: values.creditosTeoricos, creditosPracticos: values.creditosPracticos, maestro: values.maestro, competenciaGeneral: values.competenciaGeneral, intencionDidactica: values.intencionDidactica, caracterizacion: values.caracterizacion, tipoMateria: values.tipoMateria, semestre: values.semestre };
   const data = await editMateria(materiaId.value, newValues);
   if (data) {
     isUp.value = false;
@@ -59,6 +59,15 @@ async function apiDel() {
     const updatedMaterias = await getMateriasByCarrera(JSON.parse(localStorage.getItem("carrera")).cId);
     materias.value = updatedMaterias;
   }
+}
+
+function access(param) {
+  localStorage.setItem("materia", JSON.stringify({
+    mId: param.id,
+    mNombre: param.nombre,
+    mClave: param.clave,
+  }));
+  router.push('/grupo')
 }
 
 function pushMaterias() {
@@ -86,9 +95,9 @@ function editeItem(param) {
   clave.value.value = param.clave
   creditosTeoricos.value.value = param.creditosTeoricos
   creditosPracticos.value.value = param.creditosPracticos
-  maestro.value.value = param.maestro
+  maestro.value.value = param.idMaestro + " - " + param.maestro
   competenciaGeneral.value.value = param.competenciaGeneral
-  intencionDidactica.value.value = param.intencionDidactica
+  intencionDidactica.value.value = param.idIntecion + " - " + param.intencionDidactica
   caracterizacion.value.value = param.caracterizacion
   tipoMateria.value.value = param.tipoMateria
   semestre.value.value = param.semestre
@@ -114,14 +123,12 @@ const headers = [
   },
   { key: 'nombre', title: 'Nombre' },
   { key: 'clave', title: 'Clave' },
-  { key: 'creditosTeoricos', title: 'C. Teoricos' },
-  { key: 'creditosPracticos', title: 'C. Practicos' },
   { key: 'maestro', title: 'Maestro' },
   { key: 'competenciaGeneral', title: 'Competencia General' },
   { key: 'intencionDidactica', title: 'Intencion Didactica' },
-  { key: 'caracterizacion', title: 'Caracterizacion' },
   { key: 'tipoMateria', title: 'Tipo de Materia' },
   { key: 'semestre', title: 'Semestre' },
+  { title: 'Acceder', key: 'acceder', sortable: false },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Eliminar', key: 'delete', sortable: false },
 ];
@@ -129,13 +136,14 @@ async function fillTable() {
   const data = await getMateriasByCarrera(JSON.parse(localStorage.getItem("carrera")).cId);
   materias.value = data;
   carerra.value.value = JSON.parse(localStorage.getItem("carrera")).cId
-;}
+    ;
+}
 async function fillAutocompletes() {
   const maes = await getMaestros();
   const processedMaes = maes.map(maestro => maestro.id + " - " + maestro.nombre + " " + maestro.apellido);
   maestros.value = processedMaes;
   const inte = await getIntencionDidactica();
-  const processedInte = inte.map(intecion => intecion.id + " - " + intecion.nombre);
+  const processedInte = inte.map(intecion => intecion.idIntecion + " - " + intecion.nombre);
   intenciones.value = processedInte;
 }
 onBeforeMount(fillTable);
@@ -186,13 +194,15 @@ onBeforeMount(fillAutocompletes);
                   <v-text-field v-model="competenciaGeneral.value.value"
                     :error-messages="competenciaGeneral.errorMessage.value" label="Competencia General"
                     variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-autocomplete v-model="intencionDidactica.value.value" :error-messages="intencionDidactica.errorMessage.value"
-                    label="Intencion Didactica" variant="outlined" class="w-full mb-2" :items="intenciones"></v-autocomplete>
+                  <v-autocomplete v-model="intencionDidactica.value.value"
+                    :error-messages="intencionDidactica.errorMessage.value" label="Intencion Didactica"
+                    variant="outlined" class="w-full mb-2" :items="intenciones"></v-autocomplete>
                   <v-text-field v-model="caracterizacion.value.value"
                     :error-messages="caracterizacion.errorMessage.value" label="Caracterizacion" variant="outlined"
                     class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="tipoMateria.value.value" :error-messages="tipoMateria.errorMessage.value"
-                    label="Tipo de Materia" variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="tipoMateria.value.value" :error-messages="tipoMateria.errorMessage.value"
+                    label="Tipo de Materia" variant="outlined" class="w-full mb-2"
+                    :items="['Común', 'Especialidad']"></v-autocomplete>
                   <v-text-field v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
                     label="Semestre" variant="outlined" class="w-full mb-2"></v-text-field>
                   <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
@@ -254,19 +264,20 @@ onBeforeMount(fillAutocompletes);
                         <v-text-field v-model="creditosPracticos.value.value"
                           :error-messages="creditosPracticos.errorMessage.value" label="Creditos Practicos"
                           variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="maestro.value.value" :error-messages="maestro.errorMessage.value"
-                          label="Maestro" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-autocomplete v-model="maestro.value.value" :error-messages="maestro.errorMessage.value"
+                          label="Maestro" variant="outlined" class="w-full mb-2" :items="maestros"></v-autocomplete>
                         <v-text-field v-model="competenciaGeneral.value.value"
                           :error-messages="competenciaGeneral.errorMessage.value" label="Competencia General"
                           variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="intencionDidactica.value.value"
+                        <v-autocomplete v-model="intencionDidactica.value.value"
                           :error-messages="intencionDidactica.errorMessage.value" label="Intencion Didactica"
-                          variant="outlined" class="w-full mb-2"></v-text-field>
+                          variant="outlined" class="w-full mb-2" :items="intenciones"></v-autocomplete>
                         <v-text-field v-model="caracterizacion.value.value"
                           :error-messages="caracterizacion.errorMessage.value" label="Caracterizacion"
                           variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="tipoMateria.value.value" :error-messages="tipoMateria.errorMessage.value"
-                          label="Tipo de Materia" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-autocomplete v-model="tipoMateria.value.value"
+                          :error-messages="tipoMateria.errorMessage.value" label="Tipo de Materia" variant="outlined"
+                          class="w-full mb-2" :items="['Común', 'Especialidad']"></v-autocomplete>
                         <v-text-field v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
                           label="Semestre" variant="outlined" class="w-full mb-2"></v-text-field>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>

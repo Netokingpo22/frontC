@@ -15,11 +15,11 @@ const materiaValidate = () => {
                 return 'La clave no puede estar vacío.'
             },
             creditosTeoricos(value) {
-                if (value?.length >= 1) return true
+                if (value > 0) return true
                 return 'Los creditos teoricos no pueden estar vacío.'
             },
             creditosPracticos(value) {
-                if (value?.length >= 1) return true
+                if (value > 0) return true
                 return 'Los creditos practicos no pueden estar vacío.'
             },
             maestro(value) {
@@ -43,7 +43,7 @@ const materiaValidate = () => {
                 return 'El tipo Materia no puede estar vacío.'
             },
             semestre(value) {
-                if (value?.length >= 1) return true
+                if (value > 0) return true
                 return 'El semestre no puede estar vacío.'
             },
         },

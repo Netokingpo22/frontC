@@ -93,7 +93,7 @@ const intencionDidacticaId = ref('');
 const headers = [
   {
     align: 'start',
-    key: 'id',
+    key: 'idIntecion',
     sortable: true,
     title: 'Id',
   },
