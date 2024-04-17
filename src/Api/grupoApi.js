@@ -4,9 +4,16 @@ import toastification from '../composable/toastification'
 const { option, useToast } = toastification();
 
 const grupoApi = () => {
-    const APIURL = 'http://127.0.0.1:8000/api/v1/Grupo/';
+    const APIURL = 'http://127.0.0.1:8000/api/v1/Grupo';
 
     async function setGrupo(values) {
+        if (values.semestre === "Enero - Mayo") {
+            values.semestre = "1";
+        } else if (values.semestre === "Verano") {
+            values.semestre = "2";
+        } else if (values.semestre === "Agosto - Diciembre") {
+            values.semestre = "3";
+        }
         try {
             await axios.post(APIURL, values, {
                 headers: {
@@ -69,12 +76,19 @@ const grupoApi = () => {
 
     async function getGruposByMateria(materia_pk) {
         try {
-            const response = await axios.get(APIURL + '/materia/' + materia_pk + '/', {
+            const response = await axios.get(APIURL + '/materia/' + materia_pk + '', {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")
                 },
             });
+            const processedData = response.data.map(grupo => ({
+                ...grupo,
+                semestre: grupo.semestre === "1" ? "Enero - Mayo"
+                    : grupo.semestre === "2" ? "Verano"
+                        : "Agosto - Diciembre"
+            }));
+            response.data = processedData;
             return response.data;
         } catch (error) {
             if (error.code == "ERR_NETWORK") {
@@ -89,13 +103,21 @@ const grupoApi = () => {
     }
 
     async function editGrupo(id, values) {
+        if (values.semestre === "Enero - Mayo") {
+            values.semestre = "1";
+        } else if (values.semestre === "Verano") {
+            values.semestre = "2";
+        } else if (values.semestre === "Agosto - Diciembre") {
+            values.semestre = "3";
+        }
         try {
-            await axios.put(APIURL + id + '/', values, {
+            const response = await axios.put(APIURL + '/' + id, values, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")
                 },
             });
+            console.log(response);
             return true;
         } catch (error) {
             if (error.code == "ERR_NETWORK") {
@@ -109,7 +131,7 @@ const grupoApi = () => {
 
     async function deleteGrupo(id) {
         try {
-            await axios.delete(APIURL + id + '/', {
+            await axios.delete(APIURL + '/' + id, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")

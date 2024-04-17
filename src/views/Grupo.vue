@@ -5,13 +5,13 @@ import { ref, onBeforeMount } from 'vue'
 import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, mdiPlusCircle } from '@mdi/js';
 import SvgIcon from '@jamescoyle/vue-icon';
 import toastification from '../composable/toastification'
-import grupoApi from '../Api/grupoApi';  // Asegúrate de tener este archivo
-import grupoValidate from '../validates/grupoValidate';  // Asegúrate de tener este archivo
+import grupoApi from '../Api/grupoApi';
+import grupoValidate from '../validates/grupoValidate';
 
 const router = useRouter()
 const { option, useToast } = toastification();
-const { setGrupo, getGrupos, editGrupo, deleteGrupo } = grupoApi(router);
-const { materia, numero, año, semestre, handleSubmit, reset } = grupoValidate();  // Asegúrate de tener estos campos en tu validación
+const { setGrupo, getGruposByMateria, editGrupo, deleteGrupo } = grupoApi(router);
+const { materia, numero, año, semestre, handleSubmit, reset } = grupoValidate();
 const isAdd = ref(false);
 const isUp = ref(false);
 const isDel = ref(false);
@@ -28,7 +28,7 @@ async function apiPost(values) {
     isAdd.value = false;
     reset();
     useToast.success("Se ha agregado un nuevo grupo.", option);
-    const updatedGrupos = await getGrupos();
+    const updatedGrupos = await getGruposByMateria(JSON.parse(localStorage.getItem("materia")).mId);
     grupos.value = updatedGrupos;
   }
 }
@@ -37,12 +37,13 @@ const putGrupo = handleSubmit(values => {
   apiPut(values)
 })
 async function apiPut(values) {
+  values.materia = JSON.parse(localStorage.getItem("materia")).mId;
   const data = await editGrupo(grupoId.value, values);
   if (data) {
     isUp.value = false;
     reset();
     useToast.success("Se ha editado un grupo.", option);
-    const updatedGrupos = await getGrupos();
+    const updatedGrupos = await getGruposByMateria(JSON.parse(localStorage.getItem("materia")).mId);
     grupos.value = updatedGrupos;
   }
 }
@@ -53,13 +54,30 @@ async function apiDel() {
     isDel.value = false;
     reset();
     useToast.success("Se ha eliminado un grupo.", option);
-    const updatedGrupos = await getGrupos();
+    const updatedGrupos = await getGruposByMateria(JSON.parse(localStorage.getItem("materia")).mId);
     grupos.value = updatedGrupos;
   }
 }
 
-function pushGrupos() {
+function access(param) {
+  localStorage.setItem("grupo", JSON.stringify({
+    gNumero: param.numero,
+    gAño : param.año,
+    gSemestre: param.semestre,
+  })); 
+  router.push('/clase')
+}
+
+function pushMateria() {
+  router.push('/materia')
+}
+
+function pushGrupo() {
   router.push('/grupo')
+}
+
+function pushComopetencia() {
+  router.push('/Competencia')
 }
 
 function addItem() {
@@ -71,7 +89,6 @@ function editeItem(param) {
   reset();
   isUp.value = true;
   grupoId.value = param.id
-  materia.value.value = param.materia
   numero.value.value = param.numero
   año.value.value = param.año
   semestre.value.value = param.semestre
@@ -80,7 +97,6 @@ function editeItem(param) {
 function deleteItem(param) {
   isDel.value = true;
   grupoId.value = param.id
-  materia.value.value = param.materia
 }
 //Table fill ------------------------------------------
 const grupos = ref([]);
@@ -93,16 +109,17 @@ const headers = [
     sortable: true,
     title: 'Id',
   },
-  { key: 'materia', title: 'Materia' },
   { key: 'numero', title: 'Número' },
   { key: 'año', title: 'Año' },
   { key: 'semestre', title: 'Semestre' },
+  { title: 'Acceder', key: 'acceder', sortable: false },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Eliminar', key: 'delete', sortable: false },
 ];
 async function fillTable() {
-  const data = await getGrupos();
+  const data = await getGruposByMateria(JSON.parse(localStorage.getItem("materia")).mId);
   grupos.value = data;
+  materia.value = JSON.parse(localStorage.getItem("materia")).mId;
 }
 onBeforeMount(fillTable);
 </script>
@@ -113,13 +130,13 @@ onBeforeMount(fillTable);
 
       <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
         <div class="flex flex-row justify-center items-center">
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushCarreras()">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushMateria()">
             <p class=" font-bold">Atras</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushMaterias()">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushGrupo()">
             <p class=" font-bold">Grupo</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushIntDiactica()">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushComopetencia()">
             <p class=" font-bold">Competencias</p>
           </v-btn>
         </div>
@@ -136,14 +153,13 @@ onBeforeMount(fillTable);
               <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
               <div class="flex flex-col mt-6 mx-6 pb-2">
                 <form @submit.prevent="postGrupo" class="flex flex-col justify-center items-center">
-                  <v-text-field v-model="materia.value.value" :error-messages="materia.errorMessage.value"
-                    label="Materia" variant="outlined" class="w-full mb-2"></v-text-field>
                   <v-text-field v-model="numero.value.value" :error-messages="numero.errorMessage.value" label="Número"
                     variant="outlined" class="w-full mb-2"></v-text-field>
                   <v-text-field v-model="año.value.value" :error-messages="año.errorMessage.value" label="Año"
                     variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
-                    label="Semestre" variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
+                    label="Semestre" variant="outlined" class="w-full mb-2"
+                    :items="['Enero - Mayo', 'Verano', 'Agosto - Diciembre']"></v-autocomplete>
                   <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                   <v-btn class="text-none w-full my-1" variant="outlined" type="submit">
                     <p class=" font-bold">Agregar</p>
@@ -170,7 +186,7 @@ onBeforeMount(fillTable);
             </v-card-title>
           </div>
           <div class="h-[2px] bg-slate-800 mb-1"></div>
-          <v-data-table :headers="headers" :items="materias" :search="search"
+          <v-data-table :headers="headers" :items="grupos" :search="search"
             :no-data-text="'No se encontraron resultados'" :items-per-page-text="'Items por pagina'"
             class="max-h-[650px] min-h-[650px]" :items-per-page="10">
 
@@ -194,14 +210,13 @@ onBeforeMount(fillTable);
                     <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                     <div class="flex flex-col mt-6 mx-6 pb-2">
                       <form @submit.prevent="putGrupo" class="flex flex-col justify-center items-center">
-                        <v-text-field v-model="materia.value.value" :error-messages="materia.errorMessage.value"
-                          label="Materia" variant="outlined" class="w-full mb-2"></v-text-field>
                         <v-text-field v-model="numero.value.value" :error-messages="numero.errorMessage.value"
                           label="Número" variant="outlined" class="w-full mb-2"></v-text-field>
                         <v-text-field v-model="año.value.value" :error-messages="año.errorMessage.value" label="Año"
                           variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
-                          label="Semestre" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-autocomplete v-model="semestre.value.value" :error-messages="semestre.errorMessage.value"
+                          label="Semestre" variant="outlined" class="w-full mb-2"
+                          :items="['Enero - Mayo', 'Verano', 'Agosto - Diciembre']"></v-autocomplete>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                         <v-btn color="#cca329" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
                           <p class=" font-bold">Editar</p>

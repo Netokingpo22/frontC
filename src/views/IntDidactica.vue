@@ -122,7 +122,7 @@ onBeforeMount(fillTable);
             <p class=" font-bold">Materias</p>
           </v-btn>
           <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushIntDidactica()">
-            <p class=" font-bold">Intenciones didactica</p>
+            <p class=" font-bold">Int. Didactica</p>
           </v-btn>
         </div>
         <div class="pt-5"></div>
@@ -157,7 +157,7 @@ onBeforeMount(fillTable);
         <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-3/5 h-fit">
           <div class="flex mt-1 justify-between align-middle">
             <v-card-title>
-              <p class="text-xl pt-3 pl-3">intenciones didacticas</p>
+              <p class="text-xl pt-3 pl-3">Intenciones didacticas</p>
             </v-card-title>
             <v-card-title>
               <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details

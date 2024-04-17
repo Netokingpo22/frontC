@@ -38,7 +38,6 @@ const { handleSubmit } = useForm({
 })
 const nombre = useField('nombre')
 const submit = handleSubmit(values => {
-  console.log(values);
   fetch('http://127.0.0.1:8000/api/v1/actividadAprendizaje', {
     method: 'POST',
     headers: {

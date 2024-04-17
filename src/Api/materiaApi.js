@@ -7,7 +7,6 @@ const materiaApi = () => {
     const APIURL = 'http://127.0.0.1:8000/api/v1/Materia';
 
     async function setMateria(values) {
-        console.log(values);
         values.maestro = values.maestro.match(/^\d+/)[0];
         values.intencionDidactica = values.intencionDidactica.match(/^\d+/)[0];
         if (values.tipoMateria === "Común") {
@@ -83,7 +82,6 @@ const materiaApi = () => {
                     'Authorization': localStorage.getItem("token")
                 },
             });
-            console.log(response.data);
             const processedData = response.data.map(materia => ({
                 ...materia,
                 idIntecion: materia.intencionDidactica.idIntecion,
@@ -92,7 +90,6 @@ const materiaApi = () => {
                 intencionDidactica: materia.intencionDidactica.nombre,
                 tipoMateria: materia.tipoMateria === "C" ? "Común" : "Especialidad"
             }));
-            console.log(processedData);
             response.data = processedData;
             return response.data;
         } catch (error) {
