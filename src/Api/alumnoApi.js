@@ -3,10 +3,10 @@ import toastification from '../composable/toastification'
 
 const { option, useToast } = toastification();
 
-const intencionDidacticaApi = () => {
-    const APIURL = 'http://127.0.0.1:8000/api/v1/intencion_Didactica';
+const AlumnoApi = () => {
+    const APIURL = 'http://127.0.0.1:8000/api/v1/Alumno';
 
-    async function setIntencionDidactica(values) {
+    async function setAlumno(values) {
         try {
             await axios.post(APIURL, values, {
                 headers: {
@@ -25,7 +25,7 @@ const intencionDidacticaApi = () => {
         }
     }
 
-    async function getIntencionDidactica() {
+    async function getAlumno() {
         try {
             const response = await axios.get(APIURL, {
                 headers: {
@@ -46,9 +46,9 @@ const intencionDidacticaApi = () => {
         }
     }
 
-    async function editIntencionDidactica(id, values) {
+    async function editAlumno(id, values) {
         try {
-            await axios.put(APIURL + '/' + id + '/', values, {
+            await axios.put(APIURL + '/' + id, values, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")
@@ -65,9 +65,9 @@ const intencionDidacticaApi = () => {
         }
     }
 
-    async function deleteIntencionDidactica(id) {
+    async function deleteAlumno(id) {
         try {
-            await axios.delete(APIURL + "/" + id + '/', {
+            await axios.delete(APIURL + "/" + id, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")
@@ -84,8 +84,8 @@ const intencionDidacticaApi = () => {
         }
     }
     return {
-        setIntencionDidactica, getIntencionDidactica, editIntencionDidactica, deleteIntencionDidactica
+        setAlumno, getAlumno, editAlumno, deleteAlumno
     }
 }
 
-export default intencionDidacticaApi
+export default AlumnoApi

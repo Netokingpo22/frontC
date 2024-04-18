@@ -61,6 +61,7 @@ async function apiDel() {
 
 function access(param) {
   localStorage.setItem("grupo", JSON.stringify({
+    gid: param.id,
     gNumero: param.numero,
     gAño : param.año,
     gSemestre: param.semestre,

@@ -67,6 +67,10 @@ function access(param) {
     mNombre: param.nombre,
     mClave: param.clave,
   }));
+  localStorage.setItem("maestro", JSON.stringify({
+    mId: param.idMaestro,
+    mNombre: param.maestro,
+  }));
   router.push('/grupo')
 }
 

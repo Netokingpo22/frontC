@@ -7,6 +7,7 @@ const grupoApi = () => {
     const APIURL = 'http://127.0.0.1:8000/api/v1/Grupo';
 
     async function setGrupo(values) {
+        values.materia = JSON.parse(localStorage.getItem("materia")).mId;
         if (values.semestre === "Enero - Mayo") {
             values.semestre = "1";
         } else if (values.semestre === "Verano") {
@@ -111,13 +112,12 @@ const grupoApi = () => {
             values.semestre = "3";
         }
         try {
-            const response = await axios.put(APIURL + '/' + id, values, {
+            await axios.put(APIURL + '/' + id, values, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem("token")
                 },
             });
-            console.log(response);
             return true;
         } catch (error) {
             if (error.code == "ERR_NETWORK") {

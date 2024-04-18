@@ -34,6 +34,7 @@ const putIntencionDidactica = handleSubmit(values => {
   apiPut(values)
 })
 async function apiPut(values) {
+  console.log(values);
   let newValues = { nombre: values.nombre };
   const data = await editIntencionDidactica(intencionDidacticaId.value, newValues);
   if (data) {
@@ -76,13 +77,13 @@ function addItem() {
 function editeItem(param) {
   reset();
   isUp.value = true;
-  intencionDidacticaId.value = param.id
+  intencionDidacticaId.value = param.idIntecion
   nombre.value.value = param.nombre
 }
 
 function deleteItem(param) {
   isDel.value = true;
-  intencionDidacticaId.value = param.id
+  intencionDidacticaId.value = param.idIntecion
   nombre.value.value = param.nombre
 }
 

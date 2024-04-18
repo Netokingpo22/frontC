@@ -6,15 +6,20 @@ import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, md
 import SvgIcon from '@jamescoyle/vue-icon';
 import toastification from '../composable/toastification'
 import claseApi from '../Api/claseApi';
+import aulaApi from '../Api/aulaApi';
 import claseValidate from '../validates/claseValidate'
 
 const router = useRouter()
 const { option, useToast } = toastification();
-const { setClase, getClase, editClase, deleteClase } = claseApi(router);
+const { setClase, getClase, getClaseByGrupo, editClase, deleteClase } = claseApi(router);
+const { getAula } = aulaApi(router);
 const { grupo, maestro, aula, handleSubmit, reset } = claseValidate();
 const isAdd = ref(false);
 const isUp = ref(false);
 const isDel = ref(false);
+const carreaNombre = JSON.parse(localStorage.getItem("carrera")).cNombre + " (" + JSON.parse(localStorage.getItem("carrera")).cSiglas + ")"
+const materiaNombre = JSON.parse(localStorage.getItem("materia")).mNombre + " (" + JSON.parse(localStorage.getItem("materia")).mClave + ")"
+const grupoNombre = JSON.parse(localStorage.getItem("grupo")).gNumero
 
 const postClase = handleSubmit(values => {
   apiPost(values)
@@ -25,7 +30,7 @@ async function apiPost(values) {
     isAdd.value = false;
     reset();
     useToast.success("Se ha agregado una nueva clase.", option);
-    const updatedClases = await getClase();
+    const updatedClases = await getClaseByGrupo(JSON.parse(localStorage.getItem("grupo")).gid);
     clases.value = updatedClases;
   }
 }
@@ -40,7 +45,7 @@ async function apiPut(values) {
     isUp.value = false;
     reset();
     useToast.success("Se ha editado una clase.", option);
-    const updatedClases = await getClase();
+    const updatedClases = await getClaseByGrupo(JSON.parse(localStorage.getItem("grupo")).gid);;
     clases.value = updatedClases;
   }
 }
@@ -51,9 +56,16 @@ async function apiDel() {
     isDel.value = false;
     reset();
     useToast.success("Se ha eliminado una clase.", option);
-    const updatedClases = await getClase();
+    const updatedClases = await getClaseByGrupo(JSON.parse(localStorage.getItem("grupo")).gid);;
     clases.value = updatedClases;
   }
+}
+
+function access(param) {
+  localStorage.setItem("clase", JSON.stringify({
+    cId: param.id,
+  }));
+  router.push('/alumno')
 }
 
 function pushGrupo() {
@@ -79,7 +91,7 @@ function editeItem(param) {
   claseId.value = param.id
   grupo.value.value = param.grupo
   maestro.value.value = param.maestro
-  aula.value.value = param.aula
+  aula.value.value = param.aulaId + " - "+param.aulaNombre
 }
 
 function deleteItem(param) {
@@ -92,26 +104,32 @@ function deleteItem(param) {
 
 //Table fill ------------------------------------------
 const clases = ref([]);
+const aulas = ref([]);
 const search = ref('');
 const claseId = ref('');
 const headers = [
   {
     align: 'start',
-    key: 'idClase',
+    key: 'id',
     sortable: true,
     title: 'Id',
   },
-  { key: 'grupo', title: 'Grupo' },
-  { key: 'maestro', title: 'Maestro' },
-  { key: 'aula', title: 'Aula' },
+  { key: 'aulaNombre', title: 'Aula' },
+  { title: 'Acceder', key: 'acceder', sortable: false },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Eliminar', key: 'delete', sortable: false },
 ];
+async function fillAutocompletes() {
+  const au = await getAula();
+  const processedMaes = au.map(au => au.id + " - " + au.nombre);
+  aulas.value = processedMaes;
+}
 async function fillTable() {
-  const data = await getClase();
+  const data = await getClaseByGrupo(JSON.parse(localStorage.getItem("grupo")).gid);;
   clases.value = data;
 }
 onBeforeMount(fillTable);
+onBeforeMount(fillAutocompletes);
 //-----------------------------------------------------
 </script>
 
@@ -144,12 +162,8 @@ onBeforeMount(fillTable);
               <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
               <div class="flex flex-col mt-6 mx-6 pb-2">
                 <form @submit.prevent="postClase" class="flex flex-col justify-center items-center">
-                  <v-text-field v-model="grupo.value.value" :error-messages="grupo.errorMessage.value" label="Grupo"
-                    variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="maestro.value.value" :error-messages="maestro.errorMessage.value"
-                    label="Maestro" variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="aula.value.value" :error-messages="aula.errorMessage.value" label="Aula"
-                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="aula.value.value" :error-messages="aula.errorMessage.value" label="Aula"
+                    variant="outlined" class="w-full mb-2" :items="aulas"></v-autocomplete>
                   <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                   <v-btn class="text-none w-full my-1" variant="outlined" type="submit">
                     <p class=" font-bold">Agregar</p>
@@ -167,7 +181,8 @@ onBeforeMount(fillTable);
         <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-11/12 h-fit">
           <div class="flex mt-1 justify-between align-middle">
             <v-card-title>
-              <p class="text-xl pt-3 pl-3">Clase</p>
+              <p class="text-xl pt-3 pl-3">{{ carreaNombre }} / {{ materiaNombre }} / Grupo : {{ grupoNombre }} / Clases
+              </p>
             </v-card-title>
             <v-card-title>
               <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details
@@ -199,12 +214,8 @@ onBeforeMount(fillTable);
                     <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                     <div class="flex flex-col mt-6 mx-6 pb-2">
                       <form @submit.prevent="putClase" class="flex flex-col justify-center items-center">
-                        <v-text-field v-model="grupo.value.value" :error-messages="grupo.errorMessage.value"
-                          label="Grupo" variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="maestro.value.value" :error-messages="maestro.errorMessage.value"
-                          label="Maestro" variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="aula.value.value" :error-messages="aula.errorMessage.value" label="Aula"
-                          variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-autocomplete v-model="aula.value.value" :error-messages="aula.errorMessage.value"
+                          label="Aula" variant="outlined" class="w-full mb-2" :items="aulas"></v-autocomplete>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                         <v-btn color="#cca329" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
                           <p class=" font-bold">Editar</p>
@@ -231,8 +242,7 @@ onBeforeMount(fillTable);
                     <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                     <div class="flex flex-col mt-6 mx-6 pb-2">
                       <form @submit.prevent="apiDel" class="flex flex-col justify-center items-center">
-                        <h1>¿Seguro que desea eliminar "{{ grupo.value.value }}", "{{ maestro.value.value }}", "{{
-            aula.value.value }}"?</h1>
+                        <h1>¿Seguro que desea elimina la clase {{ claseId }}"?</h1>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                         <v-btn color="#cc2929" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
                           <p class=" font-bold">Eliminar</p>

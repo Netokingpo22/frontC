@@ -4,16 +4,13 @@ const claseValidate = () => {
     const { handleSubmit } = useForm({
         validationSchema: {
             grupo(value) {
-                if (value?.length >= 1) return true
-                return 'El grupo no puede estar vacío.'
+                return true
             },
             maestro(value) {
-                if (value?.length >= 1) return true
-                return 'El maestro no puede estar vacío.'
+                return true
             },
             aula(value) {
-                if (value?.length >= 1) return true
-                return 'La aula no puede estar vacía.'
+                return true
             },
         },
     })
@@ -21,8 +18,6 @@ const claseValidate = () => {
     const maestro = useField('maestro')
     const aula = useField('aula')
     const reset = () => {
-        grupo.resetField();
-        maestro.resetField();
         aula.resetField();
     }
     return {
