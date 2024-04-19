@@ -10,7 +10,6 @@ const claseApi = () => {
         values.maestro = JSON.parse(localStorage.getItem("maestro")).mId
         values.grupo = JSON.parse(localStorage.getItem("grupo")).gid
         values.aula = values.aula.match(/^\d+/)[0];
-        console.log(values);
         try {
             await axios.post(APIURL, values, {
                 headers: {

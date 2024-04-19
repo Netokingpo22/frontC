@@ -65,7 +65,7 @@ function access(param) {
   localStorage.setItem("clase", JSON.stringify({
     cId: param.id,
   }));
-  router.push('/alumno')
+  router.push('/AlumnoClase')
 }
 
 function pushGrupo() {

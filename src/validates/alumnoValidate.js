@@ -16,7 +16,7 @@ const alumnoValidate = () => {
                 return 'La matrícula no puede estar vacía.'
             },
             genero(value) {
-                if (value?.length >= 1) return true
+                if (value) return true
                 return 'El género no puede estar vacío.'
             },
         },

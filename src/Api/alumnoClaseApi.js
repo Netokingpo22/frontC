@@ -3,17 +3,12 @@ import toastification from '../composable/toastification'
 
 const { option, useToast } = toastification();
 
-const AlumnoApi = () => {
-    const APIURL = 'http://127.0.0.1:8000/api/v1/Alumno';
+const alumnoClaseApi = () => {
+    const APIURL = 'http://127.0.0.1:8000/api/v1/AlumnoClase';
 
-    async function setAlumno(values) {
-        if (values.genero === "Masculino") {
-            values.genero = "M";
-        } else if (values.genero === "Femenino") {
-            values.genero = "F";
-        } else if (values.genero === "No binario") {
-            values.genero = "N";
-        }
+    async function setAlumnoClase(values) {
+        values.alumno = values.alumno.match(/^\d+/)[0];
+        values.clase = JSON.parse(localStorage.getItem("clase")).cId
         try {
             await axios.post(APIURL, values, {
                 headers: {
@@ -32,7 +27,7 @@ const AlumnoApi = () => {
         }
     }
 
-    async function getAlumno() {
+    async function getAlumnoClase() {
         try {
             const response = await axios.get(APIURL, {
                 headers: {
@@ -40,11 +35,9 @@ const AlumnoApi = () => {
                     'Authorization': localStorage.getItem("token")
                 },
             });
-            const processedData = response.data.map(alumno => ({
-                ...alumno,
-                genero: alumno.genero === "M" ? "Masculino" :
-                    alumno.genero === "F" ? "Femenino" :
-                        "No binario"
+            const processedData = response.data.map(alumnos => ({
+                ...alumnos,
+                alumno: alumnos.alumno.id + " - " + alumnos.alumno.matricula + " - " + alumnos.alumno.nombre + " " + alumnos.alumno.apellido,
             }));
             response.data = processedData;
             return response.data;
@@ -60,14 +53,35 @@ const AlumnoApi = () => {
         }
     }
 
-    async function editAlumno(id, values) {
-        if (values.genero === "Masculino") {
-            values.genero = "M";
-        } else if (values.genero === "Femenino") {
-            values.genero = "F";
-        } else if (values.genero === "No binario") {
-            values.genero = "N";
+    async function getAlumnoClaseByClase(clase_pk) {
+        try {
+            const response = await axios.get(APIURL + '/Clase/' + clase_pk, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
+            const processedData = response.data.map(alumnos => ({
+                ...alumnos,
+                alumno: alumnos.alumno.id + " - " + alumnos.alumno.matricula + " - " + alumnos.alumno.nombre + " " + alumnos.alumno.apellido,
+            }));
+            response.data = processedData;
+            return response.data;
+        } catch (error) {
+            if (error.code == "ERR_NETWORK") {
+                useToast.error("Error en el servidor", option);
+                return;
+            }
+            if (error.response.data.detail == "not found") {
+                useToast.error("Las materias para esta carrera no existen", option);
+                return;
+            }
         }
+    }
+
+    async function editAlumnoClase(id, values) {
+        values.alumno = values.alumno.match(/^\d+/)[0];
+        values.clase = JSON.parse(localStorage.getItem("clase")).cId
         try {
             await axios.put(APIURL + '/' + id, values, {
                 headers: {
@@ -86,7 +100,7 @@ const AlumnoApi = () => {
         }
     }
 
-    async function deleteAlumno(id) {
+    async function deleteAlumnoClase(id) {
         try {
             await axios.delete(APIURL + "/" + id, {
                 headers: {
@@ -105,8 +119,8 @@ const AlumnoApi = () => {
         }
     }
     return {
-        setAlumno, getAlumno, editAlumno, deleteAlumno
+        setAlumnoClase, getAlumnoClase, getAlumnoClaseByClase, editAlumnoClase, deleteAlumnoClase
     }
 }
 
-export default AlumnoApi
+export default alumnoClaseApi

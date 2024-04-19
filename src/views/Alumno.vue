@@ -56,16 +56,16 @@ async function apiDel() {
   }
 }
 
-function pushGrupo() {
-  router.push('/grupo')
+function pushClase() {
+  router.push('/clase')
+}
+
+function pushAlumnoClase() {
+  router.push('/AlumnoClase')
 }
 
 function pushAlumno() {
-  router.push('/alumno')
-}
-
-function pushClase() {
-  router.push('/clase')
+  router.push('/Alumno')
 }
 
 function addItem() {
@@ -123,14 +123,14 @@ onBeforeMount(fillTable);
     <v-app>
       <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
         <div class="flex flex-row justify-center items-center">
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushGrupo()">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushClase()">
             <p class=" font-bold">Atras</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushClase()">
-            <p class=" font-bold">Clases</p>
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushAlumnoClase()">
+            <p class=" font-bold">Alumno/Clase</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushAula()">
-            <p class=" font-bold">Aulas</p>
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushAlumno()">
+            <p class=" font-bold">Alumnos</p>
           </v-btn>
         </div>
         <div class="pt-5"></div>
@@ -151,8 +151,9 @@ onBeforeMount(fillTable);
                     label="Apellido" variant="outlined" class="w-full mb-2"></v-text-field>
                   <v-text-field v-model="matricula.value.value" :error-messages="matricula.errorMessage.value"
                     label="Matrícula" variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="genero.value.value" :error-messages="genero.errorMessage.value" label="Género"
-                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="genero.value.value" :error-messages="genero.errorMessage.value"
+                    label="Genero" variant="outlined" class="w-full mb-2"
+                    :items="['Masculino', 'Femenino', 'No binario',]"></v-autocomplete>
                   <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                   <v-btn class="text-none w-full my-1" variant="outlined" type="submit">
                     <p class=" font-bold">Agregar</p>
@@ -178,7 +179,7 @@ onBeforeMount(fillTable);
             </v-card-title>
           </div>
           <div class="h-[2px] bg-slate-800 mb-1"></div>
-          <v-data-table :headers="headers" :items="aulas" :search="search"
+          <v-data-table :headers="headers" :items="alumnos" :search="search"
             :no-data-text="'No se encontraron resultados'" :items-per-page-text="'Items por pagina'"
             class="max-h-[650px] min-h-[650px]" :items-per-page="10">
             <template v-slot:item.acceder="{ item }">
@@ -205,8 +206,9 @@ onBeforeMount(fillTable);
                           label="Apellido" variant="outlined" class="w-full mb-2"></v-text-field>
                         <v-text-field v-model="matricula.value.value" :error-messages="matricula.errorMessage.value"
                           label="Matrícula" variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="genero.value.value" :error-messages="genero.errorMessage.value"
-                          label="Género" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-autocomplete v-model="genero.value.value" :error-messages="genero.errorMessage.value"
+                          label="Genero" variant="outlined" class="w-full mb-2"
+                          :items="['Masculino', 'Femenino', 'No binario',]"></v-autocomplete>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                         <v-btn color="#cca329" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
                           <p class=" font-bold">Editar</p>
@@ -234,7 +236,8 @@ onBeforeMount(fillTable);
                     <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                     <div class="flex flex-col mt-6 mx-6 pb-2">
                       <form @submit.prevent="apiDel" class="flex flex-col justify-center items-center">
-                        <h1>¿Seguro que desea eliminar al alumno "{{ nombre.value.value }} {{ apellido.value.value }}"?
+                        <h1>¿Seguro que desea eliminar al alumno
+                          "{{ nombre.value.value }} {{ apellido.value.value }} {{ matricula.value.value }}"?
                         </h1>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                         <v-btn color="#cc2929" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">

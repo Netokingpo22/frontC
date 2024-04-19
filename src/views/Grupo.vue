@@ -78,7 +78,7 @@ function pushGrupo() {
 }
 
 function pushComopetencia() {
-  router.push('/Competencia')
+  router.push('/tema')
 }
 
 function addItem() {
