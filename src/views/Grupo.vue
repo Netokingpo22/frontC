@@ -63,22 +63,32 @@ function access(param) {
   localStorage.setItem("grupo", JSON.stringify({
     gid: param.id,
     gNumero: param.numero,
-    gAño : param.año,
+    gAño: param.año,
     gSemestre: param.semestre,
-  })); 
+  }));
   router.push('/clase')
 }
 
 function pushMateria() {
   router.push('/materia')
 }
-
 function pushGrupo() {
   router.push('/grupo')
 }
-
-function pushComopetencia() {
-  router.push('/tema')
+function pushTema() {
+  router.push('/Tema')
+}
+function pushActividadAprendizaje() {
+  router.push('/ActividadAprendizaje')
+}
+function pushActividadEnseñanza() {
+  router.push('/ActividadEnseñanza')
+}
+function pushCompetenciaGenerica() {
+  router.push('/CompetenciaGenerica')
+}
+function pushInstrumentoEvaluacion() {
+  router.push('/InstrumentoEvaluacion')
 }
 
 function addItem() {
@@ -135,11 +145,42 @@ onBeforeMount(fillTable);
             <p class=" font-bold">Atras</p>
           </v-btn>
           <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushGrupo()">
-            <p class=" font-bold">Grupo</p>
+            <p class=" font-bold">Grupos</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushComopetencia()">
-            <p class=" font-bold">Competencias</p>
-          </v-btn>
+          <v-menu transition="slide-x-transition">
+            <template v-slot:activator="{ props }">
+              <v-btn v-bind="props" class="text-none w-2/3 my-1 mx-1" variant="outlined">
+                <p class=" font-bold">Temas</p>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item clase="flex flex-col justify-center items-center">
+                <v-btn class="text-none w-full" variant="outlined" @click="pushTema()">
+                  <p class=" font-bold">Temas</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item clase="flex flex-col justify-center items-center">
+                <v-btn class="text-none w-full" variant="outlined" @click="pushActividadAprendizaje()">
+                  <p class=" font-bold">Actividad de Aprendizaje</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item>
+                <v-btn class="text-none w-full" variant="outlined" @click="pushActividadEnseñanza()">
+                  <p class=" font-bold">Actividad de Enseñanza</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item>
+                <v-btn class="text-none w-full" variant="outlined" @click="pushCompetenciaGenerica()">
+                  <p class=" font-bold">Competencias Generica</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item>
+                <v-btn class="text-none w-full" variant="outlined" @click="pushInstrumentoEvaluacion()">
+                  <p class=" font-bold">Intrumento de Evaluacion</p>
+                </v-btn>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </div>
         <div class="pt-5"></div>
         <v-btn variant="outlined" @click="addItem()" class="max-h-[35px]" style="text-transform: none;">

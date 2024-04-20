@@ -1,73 +1,104 @@
 <script setup>
-import { useToast } from "vue-toastification";
-import { useRouter } from 'vue-router';
-
-import { useField, useForm } from 'vee-validate'
-
-import { ref, onMounted } from 'vue'
-import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiDeleteOutline, mdiFileEditOutline } from '@mdi/js';
-
-import NavBar from "../components/NavBar.vue"
 import { VDataTable } from "vuetify/labs/VDataTable";
+import { useRouter } from 'vue-router';
+import { ref, onBeforeMount } from 'vue'
+import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, mdiPlusCircle } from '@mdi/js';
+import SvgIcon from '@jamescoyle/vue-icon';
+import toastification from '../composable/toastification'
+import actAprendizajeApi from '../Api/actAprendizajeApi';
+import actAprendizajeValidate from '../validates/actAprendizajeValidate'
 
 const router = useRouter()
-const toast = useToast();
-const options = {
-  position: "top-right",
-  timeout: 5000,
-  closeOnClick: true,
-  pauseOnFocusLoss: true,
-  pauseOnHover: true,
-  draggable: true,
-  draggablePercent: 0.6,
-  showCloseButtonOnHover: false,
-  hideProgressBar: false,
-  closeButton: "button",
-  icon: true,
-  rtl: false
-};
+const { option, useToast } = toastification();
+const { setActAprendizaje, getActAprendizaje, editActAprendizaje, deleteActAprendizaje } = actAprendizajeApi(router);
+const { nombre, handleSubmit, reset } = actAprendizajeValidate();
+const isAdd = ref(false);
+const isUp = ref(false);
+const isDel = ref(false);
 
-const { handleSubmit } = useForm({
-  validationSchema: {
-    nombre(value) {
-      if (value?.length >= 1) return true
-      return 'El nombré no puede estar vacío. '
-    },
-  },
+const postActAprendizaje = handleSubmit(values => {
+  apiPost(values)
 })
-const nombre = useField('nombre')
-const submit = handleSubmit(values => {
-  fetch('http://127.0.0.1:8000/api/v1/actividadAprendizaje', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem("token")
-    },
-    body: JSON.stringify(values),
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (data.detail == "Not found.") {
-        toast.error("Error : \nEl usuario o la contraseña no son correctos", options);
-        return;
-      }
-      toast.success("Se ha iniciado sesión de manera correcta.", options);
-      getActi();
-    })
-    .catch((error) => {
-      console.log(error);
-      toast.error("Error : \nHa ocurrido un error en el servidor.", options);
-    });
-})
+async function apiPost(values) {
+  const data = await setActAprendizaje(values);
+  if (data) {
+    isAdd.value = false;
+    reset();
+    useToast.success("Se ha agregado una nueva actividad de aprendizaje.", option);
+    const updatedActAprendizajes = await getActAprendizaje();
+    actAprendizajes.value = updatedActAprendizajes;
+  }
+}
 
-const editarItem = ((param) => {
-  console.log(param);
+const putActAprendizaje = handleSubmit(values => {
+  apiPut(values)
 })
+async function apiPut(values) {
+  let newValues = { nombre: values.nombre };
+  const data = await editActAprendizaje(actAprendizajeId.value, newValues);
+  if (data) {
+    isUp.value = false;
+    reset();
+    useToast.success("Se ha editado una actividad de aprendizaje.", option);
+    const updatedActAprendizajes = await getActAprendizaje();
+    actAprendizajes.value = updatedActAprendizajes;
+  }
+}
 
-const no_results_text = "No se encontraron resultados";
-const actividad = ref([]);
+async function apiDel() {
+  const data = await deleteActAprendizaje(actAprendizajeId.value);
+  if (data) {
+    isDel.value = false;
+    reset();
+    useToast.success("Se ha eliminado una actividad de aprendizaje.", option);
+    const updatedActAprendizajes = await getActAprendizaje();
+    actAprendizajes.value = updatedActAprendizajes;
+  }
+}
+function pushMateria() {
+  router.push('/materia')
+}
+function pushGrupo() {
+  router.push('/grupo')
+}
+function pushTema() {
+  router.push('/Tema')
+}
+function pushActividadAprendizaje() {
+  router.push('/ActividadAprendizaje')
+}
+function pushActividadEnseñanza() {
+  router.push('/ActividadEnseñanza')
+}
+function pushCompetenciaGenerica() {
+  router.push('/CompetenciaGenerica')
+}
+function pushInstrumentoEvaluacion() {
+  router.push('/InstrumentoEvaluacion')
+}
+
+function addItem() {
+  reset();
+  isAdd.value = true;
+}
+
+function editeItem(param) {
+  reset();
+  isUp.value = true;
+  actAprendizajeId.value = param.id
+  nombre.value.value = param.nombre
+}
+
+function deleteItem(param) {
+  isDel.value = true;
+  actAprendizajeId.value = param.id
+  nombre.value.value = param.nombre
+}
+
+//Table fill ------------------------------------------
+const actAprendizajes = ref([]);
 const search = ref('');
+const actAprendizajeId = ref('');
 const headers = [
   {
     align: 'start',
@@ -77,72 +108,174 @@ const headers = [
   },
   { key: 'nombre', title: 'Nombre' },
   { title: 'Editar', key: 'edit', sortable: false },
-  { title: 'Elimianr', key: 'delete', sortable: false },
+  { title: 'Eliminar', key: 'delete', sortable: false },
 ];
-
-async function getActi() {
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/actividadAprendizaje', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem("token")
-      },
-    });
-    const data = await response.json();
-    actividad.value = data;
-  } catch (error) {
-    console.log(error);
-    toast.error("Error : \nHa ocurrido un error en el servidor.", options);
-  }
+async function fillTable() {
+  const data = await getActAprendizaje();
+  actAprendizajes.value = data;
 }
-onMounted(getActi);
+onBeforeMount(fillTable);
+//-----------------------------------------------------
 </script>
 
 <template>
   <main>
     <v-app>
-      <div class="flex min-h-screen">
-        <div class="bg-slate-800 w-fit">
-          <NavBar></NavBar>
-        </div>
-        <div class="flex flex-col w-full align-top">
-          <div class="w-full">
-            <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4 max-w-lg p-6">
-              <form @submit.prevent="submit" class="flex flex-col justify-center items-center">
-                <p class="text-3xl p-2 mb-4">Agregar Actividad Aprendizaje</p>
-                <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
-                  variant="outlined" class="w-full mb-3"></v-text-field>
-                <v-btn class="text-none w-full" color="#1abc9c" variant="flat" type="submit">
-                  <p class=" font-bold">Agregar</p>
+      <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
+        <div class="flex flex-row justify-center items-center">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushMateria()">
+            <p class=" font-bold">Atras</p>
+          </v-btn>
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushGrupo()">
+            <p class=" font-bold">Grupos</p>
+          </v-btn>
+          <v-menu transition="slide-x-transition">
+            <template v-slot:activator="{ props }">
+              <v-btn v-bind="props" class="text-none w-2/3 my-1 mx-1" variant="outlined">
+                <p class=" font-bold">Temas</p>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item clase="flex flex-col justify-center items-center">
+                <v-btn class="text-none w-full" variant="outlined" @click="pushTema()">
+                  <p class=" font-bold">Temas</p>
                 </v-btn>
-              </form>
-            </div>
-            <div class="flex flex-col m-6 border-solid border-2 rounded-2xl pb-4">
-              <div class="flex mt-3 justify-between align-middle">
-                <v-card-title>
-                  <p class="text-3xl pt-2 pl-4">Actividad Aprendizaje</p>
-                </v-card-title>
-                <v-card-title>
-                  <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details
-                    variant="outlined" class="min-w-[400px]"></v-text-field>
-                </v-card-title>
+              </v-list-item>
+              <v-list-item clase="flex flex-col justify-center items-center">
+                <v-btn class="text-none w-full" variant="outlined" @click="pushActividadAprendizaje()">
+                  <p class=" font-bold">Actividad de Aprendizaje</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item>
+                <v-btn class="text-none w-full" variant="outlined" @click="pushActividadEnseñanza()">
+                  <p class=" font-bold">Actividad de Enseñanza</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item>
+                <v-btn class="text-none w-full" variant="outlined" @click="pushCompetenciaGenerica()">
+                  <p class=" font-bold">Competencias Generica</p>
+                </v-btn>
+              </v-list-item>
+              <v-list-item>
+                <v-btn class="text-none w-full" variant="outlined" @click="pushInstrumentoEvaluacion()">
+                  <p class=" font-bold">Intrumento de Evaluacion</p>
+                </v-btn>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
+        <div class="pt-5"></div>
+        <v-btn variant="outlined" @click="addItem()" class="max-h-[35px]" style="text-transform: none;">
+          <p class="font-bold">Agregar</p>
+        </v-btn>
+        <v-dialog v-model="isAdd" max-width="500" class="bg-black">
+          <v-card>
+            <v-card-text class="bg-slate-200 text-slate-800">
+              <div>
+                <h1 class="text-center text-2xl font-bold antialiased">Agregar actividad de aprendizaje</h1>
               </div>
-              <v-data-table :headers="headers" :items="actividad" :search="search" class="px-6"
-                :no-data-text="no_results_text">
-                <template v-slot:item.edit="{ item }">
-                  <v-btn variant="flat" color="#FFCC33" @click="editarItem(item)">
-                    <svg-icon type="mdi" :path="mdiFileEditOutline" class="text-white"></svg-icon>
+              <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+              <div class="flex flex-col mt-6 mx-6 pb-2">
+                <form @submit.prevent="postActAprendizaje" class="flex flex-col justify-center items-center">
+                  <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
+                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                  <v-btn class="text-none w-full my-1" variant="outlined" type="submit">
+                    <p class=" font-bold">Agregar</p>
                   </v-btn>
-                </template>
-                <template v-slot:item.delete="{ item }">
-                  <v-btn variant="flat" color="#CC3333">
-                    <svg-icon type="mdi" :path="mdiDeleteOutline" class="text-white"></svg-icon>
+                  <v-btn class="text-none w-full my-1" variant="outlined" @click="isAdd = false">
+                    <p class=" font-bold">Cancelar</p>
                   </v-btn>
-                </template>
-              </v-data-table>
-            </div>
+                </form>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+
+        <!-- Tabla---------------------------------------- -->
+        <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-3/5 h-fit">
+          <div class="flex mt-1 justify-between align-middle">
+            <v-card-title>
+              <p class="text-xl pt-3 pl-3">Actividades de Aprendizaje</p>
+            </v-card-title>
+            <v-card-title>
+              <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details
+                variant="outlined" class="min-w-[300px]"></v-text-field>
+            </v-card-title>
           </div>
+          <div class="h-[2px] bg-slate-800 mb-1"></div>
+          <v-data-table :headers="headers" :items="actAprendizajes" :search="search"
+            :no-data-text="'No se encontraron resultados'" :items-per-page-text="'Items por pagina'"
+            class="max-h-[650px] min-h-[650px]" :items-per-page="10">
+
+            <template v-slot:item.acceder="{ item }">
+              <v-btn variant="outlined" color="#29cc6d" @click="access(item)" class="max-h-[25px]">
+                <svg-icon type="mdi" :path="mdiClipboardArrowRightOutline"
+                  class="text-[#29cc6d]  max-w-[20px]"></svg-icon>
+              </v-btn>
+            </template>
+
+            <template v-slot:item.edit="{ item }">
+              <v-btn variant="outlined" color="#cca329" @click="editeItem(item)" class="max-h-[25px]">
+                <svg-icon type="mdi" :path="mdiFileEditOutline" class="text-[#cca329]  max-w-[20px]"></svg-icon>
+              </v-btn>
+              <v-dialog v-model="isUp" max-width="500" class="bg-black">
+                <v-card>
+                  <v-card-text class="bg-slate-200 text-slate-800">
+                    <div>
+                      <h1 class="text-center text-2xl font-bold antialiased">Editar actividad de aprendizaje</h1>
+                    </div>
+                    <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                    <div class="flex flex-col mt-6 mx-6 pb-2">
+                      <form @submit.prevent="putActAprendizaje" class="flex flex-col justify-center items-center">
+                        <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value"
+                          label="Nombre" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                        <v-btn color="#cca329" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
+                          <p class=" font-bold">Editar</p>
+                        </v-btn>
+                        <v-btn class="text-none w-full my-1" variant="outlined" @click="isUp = false">
+                          <p class=" font-bold">Cancelar</p>
+                        </v-btn>
+                      </form>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </template>
+
+            <template v-slot:item.delete="{ item }">
+              <v-btn variant="outlined" color="#cc2929" @click="deleteItem(item)" class="max-h-[25px]">
+                <svg-icon type="mdi" :path="mdiDeleteOutline" class="text-[#cc2929]  max-w-[20px]"></svg-icon>
+              </v-btn>
+              <v-dialog v-model="isDel" max-width="500" class="bg-black">
+                <v-card>
+                  <v-card-text class="bg-slate-200 text-slate-800">
+                    <div>
+                      <h1 class="text-center text-2xl font-bold antialiased">Eliminar actividad de aprendizaje</h1>
+                    </div>
+                    <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                    <div class="flex flex-col mt-6 mx-6 pb-2">
+                      <form @submit.prevent="apiDel" class="flex flex-col justify-center items-center">
+                        <h1>¿Seguro que desea eliminar "{{ nombre.value.value }}"?</h1>
+                        <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
+                        <v-btn color="#cc2929" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
+                          <p class=" font-bold">Eliminar</p>
+                        </v-btn>
+                        <v-btn class="text-none w-full my-1" variant="outlined" @click="isDel = false">
+                          <p class=" font-bold">Cancelar</p>
+                        </v-btn>
+                      </form>
+                    </div>
+                  </v-card-text>
+                </v-card>
+
+              </v-dialog>
+            </template>
+            <template v-slot:footer>
+              <v-pagination v-model="page" :length="pages"></v-pagination>
+            </template>
+          </v-data-table>
         </div>
       </div>
     </v-app>
