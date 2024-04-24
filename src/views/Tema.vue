@@ -5,67 +5,85 @@ import { ref, onBeforeMount } from 'vue'
 import { mdiDeleteOutline, mdiFileEditOutline, mdiClipboardArrowRightOutline, mdiPlusCircle } from '@mdi/js';
 import SvgIcon from '@jamescoyle/vue-icon';
 import toastification from '../composable/toastification'
-import aulaApi from '../Api/aulaApi';
-import aulaValidate from '../validates/aulaValidate'
+import temaApi from '../Api/temaApi';
+import temaValidate from '../validates/temaValidate'
 
 const router = useRouter()
 const { option, useToast } = toastification();
-const { setAula, getAula, editAula, deleteAula } = aulaApi(router);
-const { nombre, handleSubmit, reset } = aulaValidate();
+const { setTema, getTema, editTema, deleteTema } = temaApi(router);
+const { nombre, actividadEnseñanza, actividadAprendizaje, horasTeoria, horasPractica, competenciaGenerica, portafolioEvidencia, instrumentoEvaluacion, competencia, handleSubmit, reset } = temaValidate();
 const isAdd = ref(false);
 const isUp = ref(false);
 const isDel = ref(false);
 
-const postAula = handleSubmit(values => {
+const postTema = handleSubmit(values => {
   apiPost(values)
 })
 async function apiPost(values) {
-  const data = await setAula(values);
+  const data = await setTema(values);
   if (data) {
     isAdd.value = false;
     reset();
-    useToast.success("Se ha agregado una nueva aula.", option);
-    const updatedAulas = await getAula();
-    aulas.value = updatedAulas;
+    useToast.success("Se ha agregado un nuevo tema.", option);
+    const updatedTemas = await getTema();
+    temas.value = updatedTemas;
   }
 }
 
-const putAula = handleSubmit(values => {
+const putTema = handleSubmit(values => {
   apiPut(values)
 })
 async function apiPut(values) {
   let newValues = { nombre: values.nombre };
-  const data = await editAula(aulaId.value, newValues);
+  const data = await editTema(temaId.value, newValues);
   if (data) {
     isUp.value = false;
     reset();
-    useToast.success("Se ha editado una aula.", option);
-    const updatedAulas = await getAula();
-    aulas.value = updatedAulas;
+    useToast.success("Se ha editado un tema.", option);
+    const updatedTemas = await getTema();
+    temas.value = updatedTemas;
   }
 }
 
 async function apiDel() {
-  const data = await deleteAula(aulaId.value);
+  const data = await deleteTema(temaId.value);
   if (data) {
     isDel.value = false;
     reset();
-    useToast.success("Se ha eliminado una aula.", option);
-    const updatedAulas = await getAula();
-    aulas.value = updatedAulas;
+    useToast.success("Se ha eliminado un tema.", option);
+    const updatedTemas = await getTema();
+    temas.value = updatedTemas;
   }
 }
 
-function pushGrupo() {
-  router.push('/grupo')
+function access(param) {
+  localStorage.setItem("carrera", JSON.stringify({
+    cId: param.id,
+    cNombre: param.nombre,
+    cSiglas: param.siglas,
+  }));
+  carreraId.value = param.id
+  nombre.value.value = param.nombre
+  siglas.value.value = param.siglas
+  router.push('/materia')
 }
-
-function pushAula() {
-  router.push('/aula')
+function pushCompetencia() {
+  router.push('/competencia')
 }
-
-function pushClase() {
-  router.push('/clase')
+function pushTema() {
+  router.push('/Tema')
+}
+function pushActividadAprendizaje() {
+  router.push('/ActividadAprendizaje')
+}
+function pushActividadEnseñanza() {
+  router.push('/ActividadEnseñanza')
+}
+function pushCompetenciaGenerica() {
+  router.push('/CompetenciaGenerica')
+}
+function pushInstrumentoEvaluacion() {
+  router.push('/InstrumentoEvaluacion')
 }
 
 function addItem() {
@@ -76,20 +94,20 @@ function addItem() {
 function editeItem(param) {
   reset();
   isUp.value = true;
-  aulaId.value = param.id
+  temaId.value = param.id
   nombre.value.value = param.nombre
 }
 
 function deleteItem(param) {
   isDel.value = true;
-  aulaId.value = param.id
+  temaId.value = param.id
   nombre.value.value = param.nombre
 }
 
 //Table fill ------------------------------------------
-const aulas = ref([]);
+const temas = ref([]);
 const search = ref('');
-const aulaId = ref('');
+const temaId = ref('');
 const headers = [
   {
     align: 'start',
@@ -102,8 +120,8 @@ const headers = [
   { title: 'Eliminar', key: 'delete', sortable: false },
 ];
 async function fillTable() {
-  const data = await getAula();
-  aulas.value = data;
+  const data = await getTema();
+  temas.value = data;
 }
 onBeforeMount(fillTable);
 //-----------------------------------------------------
@@ -114,30 +132,56 @@ onBeforeMount(fillTable);
     <v-app>
       <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
         <div class="flex flex-row justify-center items-center">
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushGrupo()">
+          <v-btn class="text-none w-fit mx-1" variant="outlined" @click="pushCompetencia()">
             <p class=" font-bold">Atras</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushClase()">
-            <p class=" font-bold">Clases</p>
+          <v-btn class="text-none w-fit mx-1" variant="outlined" @click="pushActividadAprendizaje()">
+            <p class=" font-bold">Act. de Aprendizaje</p>
           </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushAula()">
-            <p class=" font-bold">Aulas</p>
+          <v-btn class="text-none w-fit mx-1" variant="outlined" @click="pushActividadEnseñanza()">
+            <p class=" font-bold">Act. de Enseñanza</p>
+          </v-btn>
+          <v-btn class="text-none w-fit mx-1" variant="outlined" @click="pushCompetenciaGenerica()">
+            <p class=" font-bold">Com. Generica</p>
+          </v-btn>
+          <v-btn class="text-none w-fit mx-1" variant="outlined" @click="pushInstrumentoEvaluacion()">
+            <p class=" font-bold">Int. de Evaluacion</p>
           </v-btn>
         </div>
         <div class="pt-5"></div>
         <v-btn variant="outlined" @click="addItem()" class="max-h-[35px]" style="text-transform: none;">
           <p class="font-bold">Agregar</p>
-        </v-btn>
-        <v-dialog v-model="isAdd" max-width="500" class="bg-black"><v-card>
+        </v-btn><v-dialog v-model="isAdd" max-width="500" class="bg-black"><v-card>
             <v-card-text class="bg-slate-200 text-slate-800">
               <div>
-                <h1 class="text-center text-2xl font-bold antialiased">Agregar aula</h1>
+                <h1 class="text-center text-2xl font-bold antialiased">Agregar tema</h1>
               </div>
               <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
               <div class="flex flex-col mt-6 mx-6 pb-2">
-                <form @submit.prevent="postAula" class="flex flex-col justify-center items-center">
+                <form @submit.prevent="postTema" class="flex flex-col justify-center items-center">
                   <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
                     variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="actividadEnseñanza.value.value"
+                    :error-messages="actividadEnseñanza.errorMessage.value" label="Actividad de Enseñanza"
+                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="actividadAprendizaje.value.value"
+                    :error-messages="actividadAprendizaje.errorMessage.value" label="Actividad de Aprendizaje"
+                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="horasTeoria.value.value" :error-messages="horasTeoria.errorMessage.value"
+                    label="Horas de Teoría" variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="horasPractica.value.value" :error-messages="horasPractica.errorMessage.value"
+                    label="Horas de Práctica" variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="competenciaGenerica.value.value"
+                    :error-messages="competenciaGenerica.errorMessage.value" label="Competencia Genérica"
+                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="portafolioEvidencia.value.value"
+                    :error-messages="portafolioEvidencia.errorMessage.value" label="Portafolio de Evidencia"
+                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="instrumentoEvaluacion.value.value"
+                    :error-messages="instrumentoEvaluacion.errorMessage.value" label="Instrumento de Evaluación"
+                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-text-field v-model="competencia.value.value" :error-messages="competencia.errorMessage.value"
+                    label="Competencia" variant="outlined" class="w-full mb-2"></v-text-field>
                   <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                   <v-btn class="text-none w-full my-1" variant="outlined" type="submit">
                     <p class=" font-bold">Agregar</p>
@@ -149,13 +193,13 @@ onBeforeMount(fillTable);
               </div>
             </v-card-text>
           </v-card>
-
         </v-dialog>
+
         <!-- Tabla---------------------------------------- -->
         <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-3/5 h-fit">
           <div class="flex mt-1 justify-between align-middle">
             <v-card-title>
-              <p class="text-xl pt-3 pl-3">Aulas</p>
+              <p class="text-xl pt-3 pl-3">Tema</p>
             </v-card-title>
             <v-card-title>
               <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details
@@ -163,7 +207,7 @@ onBeforeMount(fillTable);
             </v-card-title>
           </div>
           <div class="h-[2px] bg-slate-800 mb-1"></div>
-          <v-data-table :headers="headers" :items="aulas" :search="search"
+          <v-data-table :headers="headers" :items="temas" :search="search"
             :no-data-text="'No se encontraron resultados'" :items-per-page-text="'Items por pagina'"
             class="max-h-[650px] min-h-[650px]" :items-per-page="10">
 

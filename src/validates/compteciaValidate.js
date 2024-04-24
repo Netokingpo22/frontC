@@ -15,7 +15,7 @@ const competenciaValidate = () => {
                 if (value?.length >= 1) return true
                 return 'El resumen no puede estar vacío.'
             },
-            list(value) {
+            listaCompetencia(value) {
                 return true
             },
         },
@@ -23,18 +23,18 @@ const competenciaValidate = () => {
     const nombre = useField('nombre')
     const nivel = useField('nivel')
     const resumen = useField('resumen')
-    const list = useField('list')
+    const listaCompetencia = useField('listaCompetencia')
     const reset = () => {
         nombre.resetField();
         nivel.resetField();
         resumen.resetField();
-        list.resetField();
+        listaCompetencia.resetField();
     }
     return {
         nombre,
         nivel,
         resumen, 
-        list,
+        listaCompetencia,
         handleSubmit,
         reset
     };

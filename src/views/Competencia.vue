@@ -10,11 +10,14 @@ import competenciaValidate from '../validates/compteciaValidate'
 
 const router = useRouter()
 const { option, useToast } = toastification();
-const { setCompetencia, getCompetencia, editCompetencia, deleteCompetencia } = competenciaApi(router);
-const { nombre, nivel, resumen, handleSubmit, reset } = competenciaValidate();
+const { setCompetencia, getCompetencia,getByListaCompetencia,  editCompetencia, deleteCompetencia } = competenciaApi(router);
+const { nombre, nivel, resumen, listaCompetencia, handleSubmit, reset } = competenciaValidate();
 const isAdd = ref(false);
 const isUp = ref(false);
 const isDel = ref(false);
+const carreaNombre = JSON.parse(localStorage.getItem("carrera")).cNombre + "(" + (JSON.parse(localStorage.getItem("carrera")).cSiglas) + ")"
+const materiaNombre = JSON.parse(localStorage.getItem("materia")).mNombre + " (" + JSON.parse(localStorage.getItem("materia")).mClave + ")"
+const listCompetenciaNombre = JSON.parse(localStorage.getItem("listCompetencia")).lId
 
 const postCompetencia = handleSubmit(values => {
   apiPost(values)
@@ -25,7 +28,7 @@ async function apiPost(values) {
     isAdd.value = false;
     reset();
     useToast.success("Se ha agregado una nueva competencia.", option);
-    const updatedCompetencias = await getCompetencia();
+    const updatedCompetencias = await getByListaCompetencia(listCompetenciaNombre);
     competencias.value = updatedCompetencias;
   }
 }
@@ -40,7 +43,7 @@ async function apiPut(values) {
     isUp.value = false;
     reset();
     useToast.success("Se ha editado una competencia.", option);
-    const updatedCompetencias = await getCompetencia();
+    const updatedCompetencias = await getByListaCompetencia(listCompetenciaNombre);
     competencias.value = updatedCompetencias;
   }
 }
@@ -51,21 +54,21 @@ async function apiDel() {
     isDel.value = false;
     reset();
     useToast.success("Se ha eliminado una competencia.", option);
-    const updatedCompetencias = await getCompetencia();
+    const updatedCompetencias = await getByListaCompetencia(listCompetenciaNombre);
     competencias.value = updatedCompetencias;
   }
 }
 
-function pushGrupo() {
-  router.push('/grupo')
+function access(param) {
+  localStorage.setItem("competencia", JSON.stringify({
+    cId: param.id,
+    cNombre: param.nombre,
+  }));
+  router.push('/tema')
 }
 
-function pushAula() {
-  router.push('/aula')
-}
-
-function pushClase() {
-  router.push('/clase')
+function pushLista() {
+  router.push('/listaCompetencia')
 }
 
 function addItem() {
@@ -104,11 +107,12 @@ const headers = [
   { key: 'nombre', title: 'Nombre' },
   { key: 'nivel', title: 'Nivel' },
   { key: 'resumen', title: 'Resumen' },
+  { title: 'Access', key: 'acceder', sortable: false },
   { title: 'Editar', key: 'edit', sortable: false },
   { title: 'Eliminar', key: 'delete', sortable: false },
 ];
 async function fillTable() {
-  const data = await getCompetencia();
+  const data = await getByListaCompetencia(listCompetenciaNombre);
   competencias.value = data;
 }
 onBeforeMount(fillTable);
@@ -120,14 +124,8 @@ onBeforeMount(fillTable);
     <v-app>
       <div class="flex flex-col justify-center items-center h-full bg-slate-200 text-slate-800 text-[16px] py-5">
         <div class="flex flex-row justify-center items-center">
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushGrupo()">
+          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushLista()">
             <p class=" font-bold">Atras</p>
-          </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushClase()">
-            <p class=" font-bold">Clases</p>
-          </v-btn>
-          <v-btn class="text-none w-2/3 my-1 mx-1" variant="outlined" @click="pushAula()">
-            <p class=" font-bold">Aulas</p>
           </v-btn>
         </div>
         <div class="pt-5"></div>
@@ -144,8 +142,9 @@ onBeforeMount(fillTable);
                 <form @submit.prevent="postCompetencia" class="flex flex-col justify-center items-center">
                   <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value" label="Nombre"
                     variant="outlined" class="w-full mb-2"></v-text-field>
-                  <v-text-field v-model="nivel.value.value" :error-messages="nivel.errorMessage.value" label="Nivel"
-                    variant="outlined" class="w-full mb-2"></v-text-field>
+                  <v-autocomplete v-model="nivel.value.value" :error-messages="nivel.errorMessage.value" label="Nivel"
+                    variant="outlined" class="w-full mb-2"
+                    :items="['Introductorio', 'Medio', 'Avanazado',]"></v-autocomplete>
                   <v-text-field v-model="resumen.value.value" :error-messages="resumen.errorMessage.value"
                     label="Resumen" variant="outlined" class="w-full mb-2"></v-text-field>
                   <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
@@ -166,7 +165,8 @@ onBeforeMount(fillTable);
         <div class="flex flex-col border-solid border-2 border-slate-800 px-5 py-1 mt-3 w-3/5 h-fit">
           <div class="flex mt-1 justify-between align-middle">
             <v-card-title>
-              <p class="text-xl pt-3 pl-3">Aulas</p>
+              <p class="pt-3 pl-3">{{ carreaNombre }} / {{ materiaNombre }} / Lista : {{ listCompetenciaNombre
+                }} / Competenecias</p>
             </v-card-title>
             <v-card-title>
               <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" single-line hide-details
@@ -199,8 +199,9 @@ onBeforeMount(fillTable);
                       <form @submit.prevent="putCompetencia" class="flex flex-col justify-center items-center">
                         <v-text-field v-model="nombre.value.value" :error-messages="nombre.errorMessage.value"
                           label="Nombre" variant="outlined" class="w-full mb-2"></v-text-field>
-                        <v-text-field v-model="nivel.value.value" :error-messages="nivel.errorMessage.value"
-                          label="Nivel" variant="outlined" class="w-full mb-2"></v-text-field>
+                        <v-autocomplete v-model="nivel.value.value" :error-messages="nivel.errorMessage.value"
+                          label="Nivel" variant="outlined" class="w-full mb-2"
+                          :items="['Introductorio', 'Medio', 'Avanazado',]"></v-autocomplete>
                         <v-text-field v-model="resumen.value.value" :error-messages="resumen.errorMessage.value"
                           label="Resumen" variant="outlined" class="w-full mb-2"></v-text-field>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
@@ -229,7 +230,7 @@ onBeforeMount(fillTable);
                     <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                     <div class="flex flex-col mt-6 mx-6 pb-2">
                       <form @submit.prevent="apiDel" class="flex flex-col justify-center items-center">
-                        <h1>¿Seguro que desea eliminar "{{ nombre.value.value }}" de nivel "{{ nivel.value.value }}"?
+                        <h1>¿Seguro que desea eliminar "{{ nombre.value.value }}"?
                         </h1>
                         <div class="w-full h-[2px] bg-slate-800 mt-2"></div>
                         <v-btn color="#cc2929" class="text-none w-full my-1 mt-4" variant="outlined" type="submit">
