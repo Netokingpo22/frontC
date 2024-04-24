@@ -7,6 +7,11 @@ const temaApi = () => {
     const APIURL = 'http://127.0.0.1:8000/api/v1/Tema';
 
     async function setTema(values) {
+        values.actividadEnseñanza = values.actividadEnseñanza.match(/^\d+/)[0];
+        values.actividadAprendizaje = values.actividadAprendizaje.match(/^\d+/)[0];
+        values.competenciaGenerica = values.competenciaGenerica.match(/^\d+/)[0];
+        values.instrumentoEvaluacion = values.instrumentoEvaluacion.match(/^\d+/)[0];
+        values.competencia = JSON.parse(localStorage.getItem("competencia")).cId
         try {
             await axios.post(APIURL, values, {
                 headers: {
@@ -33,6 +38,46 @@ const temaApi = () => {
                     'Authorization': localStorage.getItem("token")
                 },
             });
+            const processedData = response.data.map(tema => ({
+                ...tema,
+                actividadEnseñanza: tema.actividadEnseñanza.id + " - " + tema.actividadEnseñanza.nombre,
+                actividadAprendizaje: tema.actividadAprendizaje.id + " - " + tema.actividadAprendizaje.nombre,
+                competenciaGenerica: tema.competenciaGenerica.id + " - " + tema.competenciaGenerica.nombre,
+                instrumentoEvaluacion: tema.instrumentoEvaluacion.id + " - " + tema.instrumentoEvaluacion.nombre,
+                portafolioEvidencia: tema.portafolioEvidencia == true ? "true" : "false"
+            }));
+            response.data = processedData;
+            return response.data;
+        } catch (error) {
+            if (error.code == "ERR_NETWORK") {
+                useToast.error("Error en el servidor", option);
+                return;
+            }
+            if (error.response.data.detail == "found") {
+                useToast.error("El usuario ya existe", option);
+                return;
+            }
+        }
+    }
+
+    async function getTemaByCompetencia(competencia_id) {
+        console.log(APIURL + '/competencia/' + competencia_id+"/");
+        try {
+            const response = await axios.get(APIURL + '/competencia/' + competencia_id+"/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem("token")
+                },
+            });
+            const processedData = response.data.map(tema => ({
+                ...tema,
+                actividadEnseñanza: tema.actividadEnseñanza.id + " - " + tema.actividadEnseñanza.nombre,
+                actividadAprendizaje: tema.actividadAprendizaje.id + " - " + tema.actividadAprendizaje.nombre,
+                competenciaGenerica: tema.competenciaGenerica.id + " - " + tema.competenciaGenerica.nombre,
+                instrumentoEvaluacion: tema.instrumentoEvaluacion.id + " - " + tema.instrumentoEvaluacion.nombre,
+                portafolioEvidencia: tema.portafolioEvidencia == true ? "true" : "false"
+            }));
+            response.data = processedData;
             return response.data;
         } catch (error) {
             if (error.code == "ERR_NETWORK") {
@@ -47,6 +92,12 @@ const temaApi = () => {
     }
 
     async function editTema(id, values) {
+        values.actividadEnseñanza = values.actividadEnseñanza.match(/^\d+/)[0];
+        values.actividadAprendizaje = values.actividadAprendizaje.match(/^\d+/)[0];
+        values.competenciaGenerica = values.competenciaGenerica.match(/^\d+/)[0];
+        values.instrumentoEvaluacion = values.instrumentoEvaluacion.match(/^\d+/)[0];
+        values.competencia = JSON.parse(localStorage.getItem("competencia")).cId
+        console.log(APIURL + '/' + id, values);
         try {
             await axios.put(APIURL + '/' + id, values, {
                 headers: {
@@ -84,7 +135,7 @@ const temaApi = () => {
         }
     }
     return {
-        setTema, getTema, editTema, deleteTema
+        setTema, getTema, getTemaByCompetencia, editTema, deleteTema
     }
 }
 

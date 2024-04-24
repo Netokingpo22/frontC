@@ -36,8 +36,7 @@ const temaValidate = () => {
                 return 'El instrumento de evaluación no puede estar vacío.'
             },
             competencia(value) {
-                if (value?.length >= 1) return true
-                return 'La competencia no puede estar vacía.'
+                return true
             },
         },
     })
